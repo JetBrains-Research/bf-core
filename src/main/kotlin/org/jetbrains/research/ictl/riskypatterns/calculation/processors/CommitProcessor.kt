@@ -13,7 +13,7 @@ data class DiffEntry(val oldPath: String, val newPath: String, val changeType: C
 
 data class CommitInfo(
   val authorEmail: String,
-  val committer: String,
+  val committerEmail: String,
   val authorCommitTimestamp: Long,
   val committerTimestamp: Long,
   val diffEntries: Collection<DiffEntry>,
