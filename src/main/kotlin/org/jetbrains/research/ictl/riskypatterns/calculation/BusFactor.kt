@@ -1,6 +1,7 @@
 package org.jetbrains.research.ictl.riskypatterns.calculation
 
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.CommitInfo
+import org.jetbrains.research.ictl.riskypatterns.calculation.entities.FileInfo
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.Tree
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserVis
 import org.jetbrains.research.ictl.riskypatterns.calculation.processors.CommitProcessor
@@ -35,7 +36,7 @@ open class BusFactor(private val botsLogins: Set<String> = emptySet()) {
   open fun calculate(
     repositoryName: String,
     commitsInfo: Iterable<CommitInfo>,
-    filePathsToBytes: Iterable<Pair<String, Long>>
+    filePathsToBytes: Iterable<FileInfo>
   ): Tree {
     val context = BusFactorComputationContext(botsLogins = botsLogins)
     val commitProcessor = CommitProcessor(context)
@@ -84,7 +85,7 @@ open class BusFactor(private val botsLogins: Set<String> = emptySet()) {
   }
 
   // fixme: add filter for files
-  private fun buildTree(repositoryName: String, filePathsToBytes: Iterable<Pair<String, Long>>): Tree {
+  private fun buildTree(repositoryName: String, filePathsToBytes: Iterable<FileInfo>): Tree {
     val root = Tree(repositoryName, ".")
     var allSize = 0L
     filePathsToBytes.forEach { (filePath, bytes) ->

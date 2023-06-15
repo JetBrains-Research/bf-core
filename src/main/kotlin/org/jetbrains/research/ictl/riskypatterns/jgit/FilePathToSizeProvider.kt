@@ -6,15 +6,16 @@ import org.eclipse.jgit.lib.Repository
 import org.eclipse.jgit.revwalk.RevWalk
 import org.eclipse.jgit.treewalk.TreeWalk
 import org.jetbrains.research.ictl.riskypatterns.calculation.BusFactor
+import org.jetbrains.research.ictl.riskypatterns.calculation.entities.FileInfo
 
-class FilePathToSizeProvider(private val repository: Repository) : Iterable<Pair<String, Long>> {
+class FilePathToSizeProvider(private val repository: Repository) : Iterable<FileInfo> {
 
-  override fun iterator(): Iterator<Pair<String, Long>> = FilePathToSizeRepoIterator(repository)
+  override fun iterator(): Iterator<FileInfo> = FilePathToSizeRepoIterator(repository)
 
-  class FilePathToSizeRepoIterator(repository: Repository) : Iterator<Pair<String, Long>> {
+  class FilePathToSizeRepoIterator(repository: Repository) : Iterator<FileInfo> {
     private val treeWalk = TreeWalk(repository)
     private val reader = repository.newObjectReader()
-    private var value: Pair<String, Long>? = null
+    private var value: FileInfo? = null
 
     init {
       val revWalk = RevWalk(repository)
@@ -29,7 +30,7 @@ class FilePathToSizeProvider(private val repository: Repository) : Iterable<Pair
 
     override fun hasNext(): Boolean = value != null
 
-    override fun next(): Pair<String, Long> {
+    override fun next(): FileInfo {
       val v = value
       if (v != null) {
         value = lookForValue()
@@ -38,7 +39,7 @@ class FilePathToSizeProvider(private val repository: Repository) : Iterable<Pair
       throw Exception("No value found")
     }
 
-    private fun lookForValue(): Pair<String, Long>? {
+    private fun lookForValue(): FileInfo? {
       while (treeWalk.next()) {
         val filePath = treeWalk.pathString
         var bytes = 0L
@@ -51,7 +52,7 @@ class FilePathToSizeProvider(private val repository: Repository) : Iterable<Pair
         } catch (e: MissingObjectException) {
           BusFactor.log.warn("Missing blob : $filePath : ${e.message} ")
         }
-        return filePath to bytes
+        return FileInfo(filePath, bytes)
       }
 
       return null
