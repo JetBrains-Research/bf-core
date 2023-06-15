@@ -1,19 +1,30 @@
 package org.jetbrains.research.ictl.riskypatterns.calculation.mappers
 
 import kotlinx.serialization.Serializable
+import org.eclipse.jgit.revwalk.RevCommit
 
 /**
  * Stores Space user ids (emails if no user id is available)
  */
 
 @Serializable
-class UserMapper : Mapper() {
+class UserMapper(private val botsLogins: Set<String> = emptySet()) : Mapper() {
 
   private val nameToUserId = HashMap<String, Int>()
 
-  fun addEmail(authorEmail: String): Int {
-    // TODO: why lowercase?
-    val email = authorEmail.lowercase()
+  fun add(commit: RevCommit): Int {
+    val email = commit.authorIdent.emailAddress.lowercase()
+    return addEmail(email)
+  }
+
+  fun addName(name: String): Int =
+    nameToUserId[name] ?: run {
+      val id = add(name)
+      nameToUserId[name] = id
+      id
+    }
+
+  fun addEmail(email: String): Int {
     val name = email.split("@").first()
     if (contains(name)) {
       val id = entityToId.remove(name)!!
@@ -26,11 +37,6 @@ class UserMapper : Mapper() {
     nameToUserId[name] = id
     return id
   }
+  fun isBot(email: String) = botsLogins.any { email.contains(it) }
 
-  fun addName(name: String): Int =
-    nameToUserId[name] ?: run {
-      val id = add(name)
-      nameToUserId[name] = id
-      id
-    }
 }

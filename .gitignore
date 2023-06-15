@@ -41,3 +41,5 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+**/src/test/testData/repository
+!**/src/test/testData/bf_result

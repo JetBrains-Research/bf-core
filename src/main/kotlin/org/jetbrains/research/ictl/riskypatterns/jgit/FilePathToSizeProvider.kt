@@ -1,9 +1,8 @@
-package org.jetbrains.research.ictl.riskypatterns
+package org.jetbrains.research.ictl.riskypatterns.jgit
 
 import org.eclipse.jgit.errors.MissingObjectException
 import org.eclipse.jgit.lib.Constants
 import org.eclipse.jgit.lib.Repository
-import org.eclipse.jgit.revwalk.RevCommit
 import org.eclipse.jgit.revwalk.RevWalk
 import org.eclipse.jgit.treewalk.TreeWalk
 import org.jetbrains.research.ictl.riskypatterns.calculation.BusFactor

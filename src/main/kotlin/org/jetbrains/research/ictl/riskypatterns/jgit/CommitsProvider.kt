@@ -1,4 +1,4 @@
-package org.jetbrains.research.ictl.riskypatterns
+package org.jetbrains.research.ictl.riskypatterns.jgit
 
 import org.eclipse.jgit.diff.DiffEntry.ChangeType
 import org.eclipse.jgit.diff.DiffFormatter

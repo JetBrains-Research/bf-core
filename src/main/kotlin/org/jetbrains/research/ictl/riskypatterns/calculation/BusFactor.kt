@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory
 import java.util.*
 import kotlin.collections.ArrayDeque
 
-open class BusFactor {
+open class BusFactor(private val botsLogins: Set<String> = emptySet()) {
 
   companion object {
     val log: Logger = LoggerFactory.getLogger(BusFactor::class.java)
@@ -35,7 +35,7 @@ open class BusFactor {
   }
 
   open fun calculate(repositoryName: String, commitsInfo: Sequence<CommitInfo>, filePathsToBytes: Sequence<Pair<String, Long>>): Tree {
-    val context = BusFactorComputationContext()
+    val context = BusFactorComputationContext(botsLogins = botsLogins)
     val commitProcessor = CommitProcessor(context)
 
     proceedCommits(commitProcessor, commitsInfo)
