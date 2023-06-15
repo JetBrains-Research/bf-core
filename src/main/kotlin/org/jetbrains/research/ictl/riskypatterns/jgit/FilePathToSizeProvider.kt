@@ -12,7 +12,7 @@ class FilePathToSizeProvider(private val repository: Repository) : Iterable<File
 
   override fun iterator(): Iterator<FileInfo> = FilePathToSizeRepoIterator(repository)
 
-  class FilePathToSizeRepoIterator(repository: Repository) : Iterator<FileInfo> {
+  class FilePathToSizeRepoIterator(repository: Repository) : Iterator<FileInfo>, AutoCloseable {
     private val treeWalk = TreeWalk(repository)
     private val reader = repository.newObjectReader()
     private var value: FileInfo? = null
@@ -28,7 +28,13 @@ class FilePathToSizeProvider(private val repository: Repository) : Iterable<File
       value = lookForValue()
     }
 
-    override fun hasNext(): Boolean = value != null
+    override fun hasNext(): Boolean {
+      val hasNext = value != null
+      if (!hasNext) {
+        close()
+      }
+      return hasNext
+    }
 
     override fun next(): FileInfo {
       val v = value
@@ -56,6 +62,11 @@ class FilePathToSizeProvider(private val repository: Repository) : Iterable<File
       }
 
       return null
+    }
+
+    override fun close() {
+      treeWalk.close()
+      reader.close()
     }
 
   }

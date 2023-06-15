@@ -56,7 +56,13 @@ class CommitsProvider(private val repository: Repository) : Iterable<CommitInfo>
       iterator = revWalk.iterator()
     }
 
-    override fun hasNext(): Boolean = iterator.hasNext()
+    override fun hasNext(): Boolean {
+      val hasNext = iterator.hasNext()
+      if (!hasNext) {
+        close()
+      }
+      return hasNext
+    }
 
     override fun next(): CommitInfo {
       val commit = iterator.next()
