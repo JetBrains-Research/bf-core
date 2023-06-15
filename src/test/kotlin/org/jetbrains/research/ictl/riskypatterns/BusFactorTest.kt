@@ -5,7 +5,7 @@ import org.eclipse.jgit.internal.storage.file.FileRepository
 import org.jetbrains.research.ictl.riskypatterns.calculation.BusFactor
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.Tree
 import org.jetbrains.research.ictl.riskypatterns.jgit.CommitsProvider
-import org.jetbrains.research.ictl.riskypatterns.jgit.FilePathToSizeProvider
+import org.jetbrains.research.ictl.riskypatterns.jgit.FileInfoProvider
 import org.junit.jupiter.api.Test
 import java.io.File
 import kotlin.test.assertEquals
@@ -26,8 +26,8 @@ class BusFactorTest {
     val bf = BusFactor()
     val repository = FileRepository(gitFile)
     val commitsProvider = CommitsProvider(repository)
-    val filePathToSizeProvider = FilePathToSizeProvider(repository)
-    val tree = bf.calculate("test", commitsProvider, filePathToSizeProvider)
+    val fileInfoProvider = FileInfoProvider(repository)
+    val tree = bf.calculate("test", commitsProvider, fileInfoProvider)
     val json = Json { encodeDefaults = false }
     val treeTest = json.decodeFromString<Tree>(previousResult.readText())
     compareTrees(tree, treeTest)

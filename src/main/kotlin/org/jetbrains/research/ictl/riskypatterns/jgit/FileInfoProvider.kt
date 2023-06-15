@@ -8,7 +8,7 @@ import org.eclipse.jgit.treewalk.TreeWalk
 import org.jetbrains.research.ictl.riskypatterns.calculation.BusFactor
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.FileInfo
 
-class FilePathToSizeProvider(private val repository: Repository) : Iterable<FileInfo> {
+class FileInfoProvider(private val repository: Repository) : Iterable<FileInfo> {
 
   override fun iterator(): Iterator<FileInfo> = FilePathToSizeRepoIterator(repository)
 
