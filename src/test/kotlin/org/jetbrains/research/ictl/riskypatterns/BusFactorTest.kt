@@ -3,8 +3,9 @@ package org.jetbrains.research.ictl.riskypatterns
 import kotlinx.serialization.json.Json
 import org.eclipse.jgit.internal.storage.file.FileRepository
 import org.jetbrains.research.ictl.riskypatterns.calculation.BusFactor
+import org.jetbrains.research.ictl.riskypatterns.calculation.BusFactorConstants
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.Tree
-import org.jetbrains.research.ictl.riskypatterns.jgit.CommitsProvider
+import org.jetbrains.research.ictl.riskypatterns.jgit.CommitReader
 import org.jetbrains.research.ictl.riskypatterns.jgit.FileInfoProvider
 import org.junit.jupiter.api.Test
 import java.io.File
@@ -25,9 +26,9 @@ class BusFactorTest {
   fun compareWithPreviousVersion() {
     val bf = BusFactor()
     val repository = FileRepository(gitFile)
-    val commitsProvider = CommitsProvider(repository)
+    val commitReader = CommitReader(repository)
     val fileInfoProvider = FileInfoProvider(repository)
-    val tree = bf.calculate("test", commitsProvider, fileInfoProvider)
+    val tree = bf.calculate("test", commitReader.commitsFromHead(BusFactorConstants.daysGap), fileInfoProvider)
     val json = Json { encodeDefaults = false }
     val treeTest = json.decodeFromString<Tree>(previousResult.readText())
     compareTrees(tree, treeTest)
@@ -53,7 +54,7 @@ class BusFactorTest {
 
       for (user1 in node1.users) {
         val user2 = node2.users.find { it.email == user1.email }
-          ?: throw Exception("Can't find user: ${user1.email} in ${fileName}.")
+          ?: throw Exception("Can't find user: ${user1.email} in $fileName.")
         assertEquals(user1.authorship, user2.authorship, 0.001)
       }
 
