@@ -2,24 +2,9 @@ package org.jetbrains.research.ictl.riskypatterns.calculation.processors
 
 import org.jetbrains.research.ictl.riskypatterns.calculation.BusFactorComputationContext
 import org.jetbrains.research.ictl.riskypatterns.calculation.ContributionsByUser
+import org.jetbrains.research.ictl.riskypatterns.calculation.entities.CommitInfo
+import org.jetbrains.research.ictl.riskypatterns.calculation.entities.DiffEntry
 import java.util.concurrent.ConcurrentHashMap
-
-
-data class DiffEntry(val oldPath: String, val newPath: String, val changeType: ChangeType) {
-  enum class ChangeType {
-    ADD, MODIFY, COPY, RENAME, DELETE,
-  }
-}
-
-data class CommitInfo(
-  val authorEmail: String,
-  val committerEmail: String,
-  val authorCommitTimestamp: Long,
-  val committerTimestamp: Long,
-  val diffEntries: Collection<DiffEntry>,
-  val numOfParents: Int,
-  val fullMessage: String
-)
 
 class CommitProcessor(private val context: BusFactorComputationContext) {
 

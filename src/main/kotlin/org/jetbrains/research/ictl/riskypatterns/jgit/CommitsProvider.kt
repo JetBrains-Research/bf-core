@@ -13,13 +13,13 @@ import org.eclipse.jgit.treewalk.EmptyTreeIterator
 import org.eclipse.jgit.treewalk.TreeWalk
 import org.eclipse.jgit.util.io.NullOutputStream
 import org.jetbrains.research.ictl.riskypatterns.calculation.BusFactorConstants
-import org.jetbrains.research.ictl.riskypatterns.calculation.processors.CommitInfo
-import org.jetbrains.research.ictl.riskypatterns.calculation.processors.DiffEntry
+import org.jetbrains.research.ictl.riskypatterns.calculation.entities.CommitInfo
+import org.jetbrains.research.ictl.riskypatterns.calculation.entities.DiffEntry
 import java.time.Duration
 import java.util.*
 
 
-class CommitsProvider(private val repository: Repository) : Sequence<CommitInfo> {
+class CommitsProvider(private val repository: Repository) : Iterable<CommitInfo> {
   override fun iterator(): Iterator<CommitInfo> = RepoIterator(repository)
 
   class RepoIterator(private val repository: Repository) : Iterator<CommitInfo>, AutoCloseable {

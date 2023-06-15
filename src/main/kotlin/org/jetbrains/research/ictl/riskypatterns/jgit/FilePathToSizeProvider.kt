@@ -7,7 +7,7 @@ import org.eclipse.jgit.revwalk.RevWalk
 import org.eclipse.jgit.treewalk.TreeWalk
 import org.jetbrains.research.ictl.riskypatterns.calculation.BusFactor
 
-class FilePathToSizeProvider(private val repository: Repository): Sequence<Pair<String, Long>> {
+class FilePathToSizeProvider(private val repository: Repository) : Iterable<Pair<String, Long>> {
 
   override fun iterator(): Iterator<Pair<String, Long>> = FilePathToSizeRepoIterator(repository)
 

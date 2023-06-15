@@ -1,13 +1,11 @@
 package org.jetbrains.research.ictl.riskypatterns.calculation
 
+import org.jetbrains.research.ictl.riskypatterns.calculation.entities.CommitInfo
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.Tree
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserVis
-import org.jetbrains.research.ictl.riskypatterns.calculation.processors.CommitInfo
 import org.jetbrains.research.ictl.riskypatterns.calculation.processors.CommitProcessor
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.util.*
-import kotlin.collections.ArrayDeque
 
 open class BusFactor(private val botsLogins: Set<String> = emptySet()) {
 
@@ -34,7 +32,11 @@ open class BusFactor(private val botsLogins: Set<String> = emptySet()) {
       (normalizedUserAuthorship > 0.75) && (userAuthorship > 1)
   }
 
-  open fun calculate(repositoryName: String, commitsInfo: Sequence<CommitInfo>, filePathsToBytes: Sequence<Pair<String, Long>>): Tree {
+  open fun calculate(
+    repositoryName: String,
+    commitsInfo: Iterable<CommitInfo>,
+    filePathsToBytes: Iterable<Pair<String, Long>>
+  ): Tree {
     val context = BusFactorComputationContext(botsLogins = botsLogins)
     val commitProcessor = CommitProcessor(context)
 
@@ -47,7 +49,7 @@ open class BusFactor(private val botsLogins: Set<String> = emptySet()) {
     return root
   }
 
-  private fun proceedCommits(commitProcessor: CommitProcessor, commitsInfo: Sequence<CommitInfo>) {
+  private fun proceedCommits(commitProcessor: CommitProcessor, commitsInfo: Iterable<CommitInfo>) {
     val lastCommit = commitsInfo.first()
     commitProcessor.setLastCommit(lastCommit.committerTimestamp)
     for (commit in commitsInfo) {
@@ -82,7 +84,7 @@ open class BusFactor(private val botsLogins: Set<String> = emptySet()) {
   }
 
   // fixme: add filter for files
-  private fun buildTree(repositoryName: String, filePathsToBytes: Sequence<Pair<String, Long>>): Tree {
+  private fun buildTree(repositoryName: String, filePathsToBytes: Iterable<Pair<String, Long>>): Tree {
     val root = Tree(repositoryName, ".")
     var allSize = 0L
     filePathsToBytes.forEach { (filePath, bytes) ->
