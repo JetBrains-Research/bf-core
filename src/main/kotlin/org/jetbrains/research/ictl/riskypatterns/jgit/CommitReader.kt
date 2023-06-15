@@ -7,7 +7,7 @@ import org.eclipse.jgit.revwalk.RevCommit
 import org.eclipse.jgit.revwalk.RevWalk
 import org.eclipse.jgit.revwalk.filter.CommitTimeRevFilter
 import org.eclipse.jgit.util.io.NullOutputStream
-import org.jetbrains.research.ictl.riskypatterns.calculation.processors.CommitInfo
+import org.jetbrains.research.ictl.riskypatterns.calculation.entities.CommitInfo
 import java.time.Duration
 import java.util.*
 

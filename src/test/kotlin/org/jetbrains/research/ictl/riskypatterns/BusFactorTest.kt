@@ -28,7 +28,11 @@ class BusFactorTest {
     val repository = FileRepository(gitFile)
     val commitReader = CommitReader(repository)
     val fileInfoProvider = FileInfoProvider(repository)
-    val tree = bf.calculate("test", commitReader.commitsFromHead(BusFactorConstants.daysGap), fileInfoProvider)
+    val tree = bf.calculate(
+      "test",
+      commitReader.commitsFromHead(BusFactorConstants.daysGap).toList(),
+      fileInfoProvider
+    )
     val json = Json { encodeDefaults = false }
     val treeTest = json.decodeFromString<Tree>(previousResult.readText())
     compareTrees(tree, treeTest)

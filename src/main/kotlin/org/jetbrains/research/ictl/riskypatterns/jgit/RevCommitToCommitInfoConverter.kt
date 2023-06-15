@@ -5,8 +5,8 @@ import org.eclipse.jgit.lib.ObjectReader
 import org.eclipse.jgit.revwalk.RevCommit
 import org.eclipse.jgit.treewalk.CanonicalTreeParser
 import org.eclipse.jgit.treewalk.EmptyTreeIterator
-import org.jetbrains.research.ictl.riskypatterns.calculation.processors.CommitInfo
-import org.jetbrains.research.ictl.riskypatterns.calculation.processors.DiffEntry
+import org.jetbrains.research.ictl.riskypatterns.calculation.entities.CommitInfo
+import org.jetbrains.research.ictl.riskypatterns.calculation.entities.DiffEntry
 
 internal class RevCommitToCommitInfoConverter(
   private val reader: ObjectReader,
