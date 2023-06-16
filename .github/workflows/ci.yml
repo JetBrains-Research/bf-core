@@ -22,6 +22,5 @@ jobs:
         uses: JetBrains/qodana-action@main
         with:
           upload-result: false
-          pr-mode: false
         env:
           QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
