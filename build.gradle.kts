@@ -4,12 +4,13 @@ val logback_version: String by project
 plugins {
   kotlin("jvm") version "1.8.20"
   kotlin("plugin.serialization").version("1.8.20")
-  id("org.jlleitschuh.gradle.ktlint") version "11.2.0"
   `maven-publish`
+
+  id("org.jlleitschuh.gradle.ktlint") version "11.2.0"
 }
 
 group = "org.jetbrains.research.ictl"
-version = "0.0.1"
+version = "0.0.2"
 
 repositories {
   mavenCentral()
@@ -27,6 +28,13 @@ dependencies {
 }
 
 tasks {
+  compileJava {
+    targetCompatibility = "1.8"
+  }
+  compileKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+  }
+
   ktlint {
     ignoreFailures.set(false)
     disabledRules.set(setOf("no-wildcard-imports"))
