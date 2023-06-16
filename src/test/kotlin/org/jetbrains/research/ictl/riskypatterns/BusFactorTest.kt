@@ -1,11 +1,15 @@
 package org.jetbrains.research.ictl.riskypatterns
 
 import kotlinx.serialization.json.Json
+import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.internal.storage.file.FileRepository
+import org.eclipse.jgit.lib.RepositoryCache
+import org.eclipse.jgit.util.FS
 import org.jetbrains.research.ictl.riskypatterns.calculation.BusFactor
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.Tree
 import org.jetbrains.research.ictl.riskypatterns.jgit.CommitsProvider
 import org.jetbrains.research.ictl.riskypatterns.jgit.FileInfoProvider
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.io.File
 import kotlin.test.assertEquals
@@ -14,11 +18,32 @@ import kotlin.test.assertTrue
 class BusFactorTest {
 
   companion object {
-    // TODO: add data load
     private val localTestData = File("src/test/testData/")
-    private val repositoryFile = File(localTestData, "repository")
-    private val gitFile = File(repositoryFile, ".git")
+    private val repositoryDir = File(localTestData, "repository")
+    private val gitFile = File(repositoryDir, ".git")
     private val previousResult = File(localTestData, "bf_result")
+  }
+
+  @BeforeEach
+  fun prepareRepository() {
+    if (RepositoryCache.FileKey.isGitRepository(gitFile, FS.DETECTED)) return
+
+    val repoURI = "https://github.com/facebook/react.git"
+    repositoryDir.mkdir()
+
+    Git.cloneRepository()
+      .setURI(repoURI)
+      .setDirectory(repositoryDir)
+      .setBranchesToClone(listOf("refs/heads/main"))
+      .setNoCheckout(true)
+      .call().use { result ->
+        println("Finish loading repo $repoURI")
+        println("Repository inside: " + result.repository.directory)
+      }
+
+    val repository = FileRepository(gitFile)
+    val git = Git(repository)
+    git.reset().setRef("e1e68b9f7ffecf98e1b625cfe3ab95741be1417b").call()
   }
 
   @Test
