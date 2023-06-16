@@ -18,3 +18,9 @@ jobs:
         run: ./gradlew ktlintCheck
       - name: Test
         run: ./gradlew test
+      - name: Qodana Scan
+        uses: JetBrains/qodana-action@main
+        with:
+          upload-result: false
+        env:
+          QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
