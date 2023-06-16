@@ -19,10 +19,10 @@ import java.time.Duration
 import java.util.*
 
 
-class CommitsProvider(private val repository: Repository) : Iterable<CommitInfo> {
-  override fun iterator(): Iterator<CommitInfo> = RepoIterator(repository)
+class CommitsProvider(private val repository: Repository, private val dayGap: Long = BusFactorConstants.daysGap) : Iterable<CommitInfo> {
+  override fun iterator(): Iterator<CommitInfo> = RepoIterator(repository, dayGap)
 
-  class RepoIterator(private val repository: Repository) : Iterator<CommitInfo>, AutoCloseable {
+  class RepoIterator(private val repository: Repository, private val dayGap: Long) : Iterator<CommitInfo>, AutoCloseable {
 
     companion object {
       fun jgitToLibChangeType(changeType: ChangeType): DiffEntry.ChangeType {
@@ -130,7 +130,7 @@ class CommitsProvider(private val repository: Repository) : Iterable<CommitInfo>
     private fun RevCommit.commitDate() = Date(this.commitTime * 1000L)
 
     private fun afterDate(lastCommit: RevCommit) =
-      Date.from(lastCommit.commitDate().toInstant().minus(Duration.ofDays(BusFactorConstants.daysGap)))
+      Date.from(lastCommit.commitDate().toInstant().minus(Duration.ofDays(dayGap)))
 
     override fun close() {
       revWalk.close()
