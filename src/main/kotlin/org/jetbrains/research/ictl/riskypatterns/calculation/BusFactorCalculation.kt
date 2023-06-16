@@ -104,7 +104,7 @@ class BusFactorCalculation(
     }
     return BusFactorCalculationResult(
       BusFactorStatus(busFactor = busFactor),
-      developers.map { context.userMapper.getOrNull(it)!! }.toSet()
+      developers.map { context.userMapper.getOrNull(it)!! }.toSet(),
     )
   }
 
@@ -119,9 +119,9 @@ class BusFactorCalculation(
     timeAtMeetings: Double = 0.0,
   ): Double {
     return BusFactorConstants.shift + BusFactorConstants.ownershipSlope * ownership +
-        BusFactorConstants.commitsSlope * userCommits - BusFactorConstants.otherCommitsSlope * ln(1.0 + otherUsersCommits) +
-        BusFactorConstants.reviewsSlope * userReviews - BusFactorConstants.otherReviewsSlope * ln(1.0 + otherUsersReviews) +
-        BusFactorConstants.meetingsSlope * timeAtMeetings
+      BusFactorConstants.commitsSlope * userCommits - BusFactorConstants.otherCommitsSlope * ln(1.0 + otherUsersCommits) +
+      BusFactorConstants.reviewsSlope * userReviews - BusFactorConstants.otherReviewsSlope * ln(1.0 + otherUsersReviews) +
+      BusFactorConstants.meetingsSlope * timeAtMeetings
   }
 
   private fun calcWeightedUserToFileAuthorship(
@@ -133,9 +133,9 @@ class BusFactorCalculation(
     weightedTimeAtMeetings: Double = 0.0,
   ): Double {
     return BusFactorConstants.shift + BusFactorConstants.ownershipSlope * weightedOwnership +
-        BusFactorConstants.commitsSlope * weightedCommits - BusFactorConstants.otherCommitsSlope * ln(1.0 + weightedOtherCommits) +
-        BusFactorConstants.reviewsSlope * weightedReviews - BusFactorConstants.otherReviewsSlope * ln(1.0 + weightedOtherReviews) +
-        BusFactorConstants.meetingsSlope * weightedTimeAtMeetings
+      BusFactorConstants.commitsSlope * weightedCommits - BusFactorConstants.otherCommitsSlope * ln(1.0 + weightedOtherCommits) +
+      BusFactorConstants.reviewsSlope * weightedReviews - BusFactorConstants.otherReviewsSlope * ln(1.0 + weightedOtherReviews) +
+      BusFactorConstants.meetingsSlope * weightedTimeAtMeetings
   }
 
   private fun calcNewUserToFileAuthorship(
@@ -149,11 +149,11 @@ class BusFactorCalculation(
     weightedTimeAtMeetings: Double = 0.0,
   ): Double {
     return BusFactorConstants.authorshipSlopeNew * weightedOwnership + BusFactorConstants.commitsSlopeNew * weightedCommits +
-        BusFactorConstants.reviewsSlopeNew * weightedReviews + BusFactorConstants.meetingsSlopeNew * weightedTimeAtMeetings +
-        BusFactorConstants.otherCommitsSlopeNew * ln(1 + weightedAllCommits) + BusFactorConstants.otherReviewsSlopeNew * ln(
+      BusFactorConstants.reviewsSlopeNew * weightedReviews + BusFactorConstants.meetingsSlopeNew * weightedTimeAtMeetings +
+      BusFactorConstants.otherCommitsSlopeNew * ln(1 + weightedAllCommits) + BusFactorConstants.otherReviewsSlopeNew * ln(
       1 + weightedAllReviews,
     ) -
-        BusFactorConstants.otherCommitsSlopeNew * ln(1 + weightedOtherCommits) - BusFactorConstants.otherReviewsSlopeNew * ln(
+      BusFactorConstants.otherCommitsSlopeNew * ln(1 + weightedOtherCommits) - BusFactorConstants.otherReviewsSlopeNew * ln(
       1 + weightedOtherReviews,
     )
   }

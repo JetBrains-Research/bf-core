@@ -1,3 +1,2 @@
 
 rootProject.name = "bf-core"
-

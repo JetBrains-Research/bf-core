@@ -39,5 +39,4 @@ class UserMapper(private val botsLogins: Set<String> = emptySet()) : Mapper() {
   }
 
   fun isBot(email: String) = botsLogins.any { email.contains(it) }
-
 }

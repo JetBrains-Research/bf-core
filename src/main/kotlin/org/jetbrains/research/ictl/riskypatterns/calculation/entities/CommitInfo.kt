@@ -7,5 +7,5 @@ data class CommitInfo(
   val committerTimestamp: Long,
   val diffEntries: Collection<DiffEntry>,
   val numOfParents: Int,
-  val fullMessage: String
+  val fullMessage: String,
 )

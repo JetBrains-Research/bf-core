@@ -36,7 +36,7 @@ open class BusFactor(private val botsLogins: Set<String> = emptySet()) {
   open fun calculate(
     repositoryName: String,
     commitsInfo: Iterable<CommitInfo>,
-    filePathsToBytes: Iterable<FileInfo>
+    filePathsToBytes: Iterable<FileInfo>,
   ): Tree {
     val context = BusFactorComputationContext(botsLogins = botsLogins)
     val commitProcessor = CommitProcessor(context)
@@ -61,7 +61,6 @@ open class BusFactor(private val botsLogins: Set<String> = emptySet()) {
   protected open fun processCommit(commitInfo: CommitInfo, commitProcessor: CommitProcessor): Boolean {
     return commitProcessor.processCommit(commitInfo)
   }
-
 
   private fun calculateBusFactorForTree(root: Tree, busFactorCalculation: BusFactorCalculation) {
     val queue = ArrayDeque<Tree>()

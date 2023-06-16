@@ -68,6 +68,5 @@ class FileInfoProvider(private val repository: Repository) : Iterable<FileInfo> 
       treeWalk.close()
       reader.close()
     }
-
   }
 }
