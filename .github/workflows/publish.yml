@@ -1,4 +1,4 @@
-name: Publish Docker image
+name: Publish to Maven Repository
 on:
   workflow_run:
     workflows: ["Java CI with Gradle"]
@@ -19,4 +19,4 @@ jobs:
         run: ./gradlew publish
         env:
           MAVEN_USERNAME: ${{ secrets.SPACE_MAVEN_USERNAME }}
-          MAVEN_PASSWORD: ${{ secrets.SPACE_MAVEN_TOKEN }}
+          MAVEN_PASSWORD: ${{ secrets.SPACE_MAVEN_PASSWORD }}
