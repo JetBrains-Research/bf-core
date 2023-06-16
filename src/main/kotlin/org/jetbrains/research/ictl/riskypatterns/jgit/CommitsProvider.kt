@@ -18,7 +18,6 @@ import org.jetbrains.research.ictl.riskypatterns.calculation.entities.DiffEntry
 import java.time.Duration
 import java.util.*
 
-
 class CommitsProvider(private val repository: Repository, private val dayGap: Long = BusFactorConstants.daysGap) : Iterable<CommitInfo> {
   override fun iterator(): Iterator<CommitInfo> = RepoIterator(repository, dayGap)
 
@@ -94,7 +93,6 @@ class CommitsProvider(private val repository: Repository, private val dayGap: Lo
       return diffFormatter.scan(oldTreeIter, newTreeIter)
     }
 
-
     private fun convertJgitCommit(commit: RevCommit): CommitInfo {
       val authorEmail = commit.authorIdent.emailAddress
       val committerEmail = commit.committerIdent.emailAddress
@@ -104,7 +102,7 @@ class CommitsProvider(private val repository: Repository, private val dayGap: Lo
         DiffEntry(
           it.oldPath,
           it.newPath,
-          jgitToLibChangeType(it.changeType)
+          jgitToLibChangeType(it.changeType),
         )
       }
       val numOfParents = commit.parents.size
@@ -115,9 +113,10 @@ class CommitsProvider(private val repository: Repository, private val dayGap: Lo
         committerEmail,
         authorCommitTimestamp,
         committerTimestamp,
-        diffEntries, numOfParents, fullMessage
+        diffEntries,
+        numOfParents,
+        fullMessage,
       )
-
     }
 
     private fun getDiffFormatter(repository: Repository): DiffFormatter {

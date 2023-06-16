@@ -44,10 +44,10 @@ class ContributionsByUser {
   fun isMajor(): Boolean {
     if (BusFactorConstants.newFormula) {
       return authorship >= BusFactorConstants.authorshipThresholdNew &&
-          normalizedAuthorship > BusFactorConstants.normalizedAuthorshipThreshold
+        normalizedAuthorship > BusFactorConstants.normalizedAuthorshipThreshold
     }
 
     return authorship >= BusFactorConstants.authorshipThreshold &&
-        normalizedAuthorship > BusFactorConstants.normalizedAuthorshipThreshold
+      normalizedAuthorship > BusFactorConstants.normalizedAuthorshipThreshold
   }
 }
