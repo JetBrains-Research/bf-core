@@ -2,9 +2,10 @@ val kotlin_version: String by project
 val logback_version: String by project
 
 plugins {
-    kotlin("jvm") version "1.7.22"
-    kotlin("plugin.serialization").version("1.7.22")
+    kotlin("jvm") version "1.8.20"
+    kotlin("plugin.serialization").version("1.8.20")
     id("org.jlleitschuh.gradle.ktlint") version "11.2.0"
+    `maven-publish`
 }
 
 group = "org.jetbrains.research.ictl"
@@ -40,3 +41,24 @@ tasks {
         }
     }
 }
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = group.toString()
+            artifactId = "bf-core"
+            version = version
+            from(components["java"])
+        }
+    }
+    repositories {
+        maven {
+            url = uri("https://packages.jetbrains.team/maven/p/ictl-public/public-maven")
+            credentials {
+                username = System.getenv("MAVEN_USERNAME")
+                password = System.getenv("MAVEN_PASSWORD")
+            }
+        }
+    }
+}
+
