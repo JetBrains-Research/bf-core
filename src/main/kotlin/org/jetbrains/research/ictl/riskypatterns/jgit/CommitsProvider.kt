@@ -86,8 +86,8 @@ class CommitsProvider(private val repository: Repository, private val dayGap: Lo
 
       val treeWalk = TreeWalk(repository)
       treeWalk.isRecursive = true
-      treeWalk.addTree(newTreeIter)
       treeWalk.addTree(oldTreeIter)
+      treeWalk.addTree(newTreeIter)
 
       val diffFormatter = getDiffFormatter(repository)
       return diffFormatter.scan(oldTreeIter, newTreeIter)
