@@ -60,9 +60,6 @@ class BusFactorTest {
 
   private fun compareTrees(tree1: Tree, tree2: Tree) {
     val fileNames1 = tree1.getFileNames().toSet()
-    val fileNames2 = tree1.getFileNames().toSet()
-    assertEquals(fileNames1, fileNames2, "Not same file trees")
-
     for (fileName in fileNames1) {
       val node1 = tree1.getNode(fileName)!!
       val node2 = tree2.getNode(fileName)!!
