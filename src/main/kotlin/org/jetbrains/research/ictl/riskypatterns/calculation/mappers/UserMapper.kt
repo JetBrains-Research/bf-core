@@ -9,6 +9,9 @@ import org.eclipse.jgit.revwalk.RevCommit
 
 @Serializable
 class UserMapper(private val botsLogins: Set<String> = emptySet()) : Mapper() {
+  companion object {
+    val defaultBots = setOf("dependabot", "[bot]")
+  }
 
   private val nameToUserId = HashMap<String, Int>()
 
@@ -41,5 +44,5 @@ class UserMapper(private val botsLogins: Set<String> = emptySet()) : Mapper() {
     return id
   }
 
-  fun isBot(email: String) = botsLogins.any { email.contains(it) }
+  fun isBot(email: String) = botsLogins.any { email.contains(it) } || defaultBots.any { email.contains(it) }
 }
