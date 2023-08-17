@@ -249,26 +249,30 @@ class UserMerger(val botFilter: BotFilter? = null) {
 
   }
 
-  fun mergeUsers(repository: Repository): Map<Int, List<UserInfo>> {
+  private fun MutableSet<UserInfo>.addNoBot(userInfo: UserInfo) {
+    if (botFilter?.isBot(userInfo) == false) {
+      this.add(userInfo)
+    }
+  }
+
+  fun mergeUsers(repository: Repository): Collection<Collection<UserInfo>> {
     val commitsProvider = CommitsProvider(repository)
-    val map = HashMap<String, MutableSet<String>>()
+    val set = mutableSetOf<UserInfo>()
     for (commit in commitsProvider) {
-      map.computeIfAbsent(commit.authorEmail) { mutableSetOf() }.add(commit.authorName)
-      map.computeIfAbsent(commit.committerEmail) { mutableSetOf() }.add(commit.committerName)
+      set.addNoBot(commit.authorUserInfo)
+      set.addNoBot(commit.committerUserInfo)
     }
 
     val users = mutableListOf<UserInfo>()
-    for ((email, names) in map) {
-      names.forEach { name ->
-        if (botFilter?.isBot(email, name) == false) {
-          users.add(UserInfo(name, email))
-        }
+    for (userInfo in set) {
+      if (botFilter?.isBot(userInfo) == false) {
+        users.add(userInfo)
       }
     }
     return mergeUsers(users)
   }
 
-  fun mergeUsers(usersInfo: Collection<UserInfo>): Map<Int, List<UserInfo>> {
+  fun mergeUsers(usersInfo: Collection<UserInfo>): Collection<Collection<UserInfo>> {
     val userMergeData = usersInfo.map { UserMergeData(it) }
     var id = 0
     for ((idx1, user1) in userMergeData.withIndex()) {
@@ -295,6 +299,6 @@ class UserMerger(val botFilter: BotFilter? = null) {
     userMergeData.forEach {
       result.computeIfAbsent(it.authorId) { mutableListOf() }.add(it.userInfo)
     }
-    return result
+    return result.values
   }
 }

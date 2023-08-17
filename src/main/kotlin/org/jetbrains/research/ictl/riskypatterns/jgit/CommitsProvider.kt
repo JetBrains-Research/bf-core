@@ -15,6 +15,7 @@ import org.eclipse.jgit.util.io.NullOutputStream
 import org.jetbrains.research.ictl.riskypatterns.calculation.BusFactorConstants
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.CommitInfo
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.DiffEntry
+import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserInfo
 import java.time.Duration
 import java.util.*
 
@@ -101,16 +102,17 @@ class CommitsProvider(private val repository: Repository, private val dayGap: Lo
       val numOfParents = commit.parents.size
       val fullMessage = commit.fullMessage
 
+      val authorUserInfo = UserInfo(commit.authorIdent.name, authorEmail)
+      val committerUserInfo = UserInfo(commit.committerIdent.name, committerEmail)
+
       return CommitInfo(
-        authorEmail,
-        committerEmail,
+        authorUserInfo,
+        committerUserInfo,
         authorCommitTimestamp,
         committerTimestamp,
         diffEntries,
         numOfParents,
         fullMessage,
-        authorName = commit.authorIdent.name,
-        committerName = commit.committerIdent.name,
       )
     }
 

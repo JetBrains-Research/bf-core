@@ -188,8 +188,8 @@ class CommitProcessor(private val context: BusFactorComputationContext) {
         result.add(name to email)
       }
     }
-    val authorEmail = commit.authorEmail
-    val authorName = commit.authorName
+    val authorName = commit.authorUserInfo.userName
+    val authorEmail = commit.authorUserInfo.userEmail
     result.add(authorName to authorEmail)
     return result
   }
