@@ -1,12 +1,7 @@
 package org.jetbrains.research.ictl.riskypatterns.jgit
 
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import org.eclipse.jgit.diff.DiffEntry.ChangeType
 import org.eclipse.jgit.diff.DiffFormatter
-import org.eclipse.jgit.diff.RawTextComparator
-import org.eclipse.jgit.internal.storage.file.FileRepository
 import org.eclipse.jgit.lib.Constants
 import org.eclipse.jgit.lib.ObjectReader
 import org.eclipse.jgit.lib.Repository
@@ -20,20 +15,8 @@ import org.eclipse.jgit.util.io.NullOutputStream
 import org.jetbrains.research.ictl.riskypatterns.calculation.BusFactorConstants
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.CommitInfo
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.DiffEntry
-import java.io.ByteArrayOutputStream
-import java.io.File
 import java.time.Duration
 import java.util.*
-
-@Serializable
-data class FileEdit(
-  val addBlock: List<String>,
-  val deleteBlock: List<String>,
-  val preStartLineNum: Int,
-  val postStartLineNum: Int,
-  val oldPath: String,
-  val newPath: String
-)
 
 class CommitsProvider(private val repository: Repository, private val dayGap: Long = BusFactorConstants.daysGap) : Iterable<CommitInfo> {
   override fun iterator(): Iterator<CommitInfo> = RepoIterator(repository, dayGap)
