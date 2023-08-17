@@ -1,9 +1,11 @@
 package org.jetbrains.research.ictl.riskypatterns.calculation
 
+import org.eclipse.jgit.internal.storage.file.FileRepository
 import org.eclipse.jgit.lib.Repository
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.NMaxHeap
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserInfo
 import org.jetbrains.research.ictl.riskypatterns.jgit.CommitsProvider
+import java.io.File
 import kotlin.math.max
 import kotlin.math.min
 
@@ -299,6 +301,6 @@ class UserMerger(val botFilter: BotFilter? = null) {
     userMergeData.forEach {
       result.computeIfAbsent(it.authorId) { mutableListOf() }.add(it.userInfo)
     }
-    return result.values
+    return result.values.filter { users -> users.mapTo(mutableSetOf()) { it.userEmail }.size > 1 }
   }
 }
