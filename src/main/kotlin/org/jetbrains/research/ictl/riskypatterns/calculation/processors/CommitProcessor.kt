@@ -127,11 +127,17 @@ class CommitProcessor(private val context: BusFactorComputationContext) {
   fun processCommit(commitInfo: CommitInfo): Boolean {
     if (commitInfo.numOfParents > 1) return false
 
-    val authors = getAuthors(commitInfo).filter { !context.userMapper.isBot(it) }
+    val authors = getAuthorsNameEmailPairs(commitInfo).filter {
+      val (name, email) = it
+      !context.userMapper.isBot(email, name)
+    }
     if (authors.isEmpty()) {
       return false
     }
-    val userIds = authors.map { context.userMapper.addEmail(it) }.toSet()
+    val userIds = authors.map {
+      val (_, email) = it
+      context.userMapper.addEmail(email)
+    }.toSet()
     val authorCommitTimestamp = commitInfo.authorCommitTimestamp
 
     for (diffEntry in commitInfo.diffEntries) {
@@ -170,17 +176,21 @@ class CommitProcessor(private val context: BusFactorComputationContext) {
     }
   }
 
-  private fun getAuthors(commit: CommitInfo): Set<String> {
-    val result = mutableSetOf<String>()
+  private fun getAuthorsNameEmailPairs(commit: CommitInfo): Set<Pair<String, String>> {
+    val result = mutableSetOf<Pair<String, String>>()
     val msg = commit.fullMessage
     for (line in msg.split("\n")) {
       if (line.startsWith(coAuthorStartToken)) {
-        val email = line.trim().split(" ").last().removePrefix("<").removeSuffix(">")
-        result.add(email)
+        val nameEmail = line.removePrefix(coAuthorStartToken)
+        val emailStart = nameEmail.indexOfLast { it == '<' }
+        val email = nameEmail.substring(emailStart + 1, nameEmail.lastIndex)
+        val name = nameEmail.substring(0, emailStart)
+        result.add(name to email)
       }
     }
-    val author = commit.authorEmail
-    result.add(author)
+    val authorEmail = commit.authorEmail
+    val authorName = commit.authorName
+    result.add(authorName to authorEmail)
     return result
   }
 }
