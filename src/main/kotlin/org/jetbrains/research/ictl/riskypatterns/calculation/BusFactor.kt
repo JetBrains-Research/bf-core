@@ -3,6 +3,7 @@ package org.jetbrains.research.ictl.riskypatterns.calculation
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.CommitInfo
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.FileInfo
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.Tree
+import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserInfo
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserVis
 import org.jetbrains.research.ictl.riskypatterns.calculation.mappers.UserMapper
 import org.jetbrains.research.ictl.riskypatterns.calculation.processors.CommitProcessor
@@ -38,10 +39,10 @@ open class BusFactor {
     repositoryName: String,
     commitsInfo: Iterable<CommitInfo>,
     filePathsToBytes: Iterable<FileInfo>,
-    botsLogins: Collection<String> = emptySet(),
-    sameUserEmails: Collection<List<String>> = emptySet()
+    botFilter: BotFilter? = null,
+    mergedUsers: Collection<Collection<UserInfo>> = emptyList()
   ): Tree {
-    val userMapper = UserMapper(botsLogins, sameUserEmails)
+    val userMapper = UserMapper(botFilter, mergedUsers)
     val context = BusFactorComputationContext(userMapper)
     val commitProcessor = CommitProcessor(context)
 

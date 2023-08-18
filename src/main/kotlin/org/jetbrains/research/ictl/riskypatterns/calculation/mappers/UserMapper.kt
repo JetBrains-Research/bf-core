@@ -3,6 +3,7 @@ package org.jetbrains.research.ictl.riskypatterns.calculation.mappers
 import kotlinx.serialization.Serializable
 import org.eclipse.jgit.revwalk.RevCommit
 import org.jetbrains.research.ictl.riskypatterns.calculation.BotFilter
+import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserInfo
 
 /**
  * Stores Space user ids (emails if no user id is available)
@@ -13,9 +14,10 @@ class UserMapper() : Mapper() {
   private var botFilter: BotFilter? = null
   private val nameToUserId = HashMap<String, Int>()
 
-  constructor(botsLogins: Collection<String> = emptySet(), sameUserEmails: Collection<List<String>> = emptySet()) : this() {
-    botFilter = BotFilter(botsLogins)
-    for (userEmails in sameUserEmails) {
+  constructor(botFilter: BotFilter? = null,
+              mergedUsers: Collection<Collection<UserInfo>> = emptyList()) : this() {
+    this.botFilter = botFilter
+    for (userEmails in mergedUsers) {
       addUserEmails(userEmails)
     }
   }
@@ -34,10 +36,10 @@ class UserMapper() : Mapper() {
     }
   }
 
-  private fun addUserEmails(emails: List<String>) {
-    val id = add(emails.first().lowercase())
+  private fun addUserEmails(emails: Collection<UserInfo>) {
+    val id = add(emails.first().userEmail.lowercase())
     for (email in emails) {
-      val lowercaseEmail = email.lowercase()
+      val lowercaseEmail = email.userEmail.lowercase()
       entityToId[lowercaseEmail] = id
     }
   }

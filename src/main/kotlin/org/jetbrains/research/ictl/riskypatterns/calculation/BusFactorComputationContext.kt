@@ -3,6 +3,7 @@ package org.jetbrains.research.ictl.riskypatterns.calculation
 import kotlinx.serialization.Serializable
 import org.jetbrains.research.ictl.riskypatterns.calculation.BusFactor.Companion.isMainContributor
 import org.jetbrains.research.ictl.riskypatterns.calculation.BusFactor.Companion.isMinorContributor
+import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserInfo
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserStats
 import org.jetbrains.research.ictl.riskypatterns.calculation.mappers.FileMapper
 import org.jetbrains.research.ictl.riskypatterns.calculation.mappers.UserMapper
@@ -29,7 +30,8 @@ data class BusFactorComputationContext(
   val userMapper: UserMapper = UserMapper(),
   val fileMapper: FileMapper = FileMapper(),
 ) {
-  constructor(botsLogins: Set<String>, sameUserEmails: Collection<List<String>> = emptySet()) : this(UserMapper(botsLogins, sameUserEmails))
+  constructor(botFilter: BotFilter? = null,
+              mergedUsers: Collection<Collection<UserInfo>> = emptyList()) : this(UserMapper(botFilter, mergedUsers))
 
   // [fileId] = ownership
   val filesOwnership: MutableMap<Int, OwnershipPerUser> = HashMap()
