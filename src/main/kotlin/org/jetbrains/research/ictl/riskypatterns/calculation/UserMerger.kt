@@ -159,16 +159,18 @@ class UserMerger(val botFilter: BotFilter? = null) {
       }
 
       if (checkSize(this.firstName, this.lastName, userMergeData.firstName, userMergeData.lastName)) {
-
+        val ffScore = score(this.firstName, userMergeData.firstName)
+        val fpScore = score(this.firstName, userMergeData.penultimateName)
+        val pfScore = score(this.penultimateName, userMergeData.firstName)
         if (checkSize(this.penultimateName, userMergeData.penultimateName)) {
           heap.add(
             min(
-              score(this.firstName, userMergeData.firstName),
+              ffScore,
               max(
-                score(this.firstName, userMergeData.firstName),
+                ffScore,
                 max(
-                  score(this.firstName, userMergeData.penultimateName),
-                  score(this.penultimateName, userMergeData.firstName),
+                  fpScore,
+                  pfScore,
                 ),
               ),
             ),
@@ -176,12 +178,12 @@ class UserMerger(val botFilter: BotFilter? = null) {
 
           heap.add(
             min(
-              score(this.firstName, userMergeData.firstName),
+              ffScore,
               max(
-                score(this.penultimateName, userMergeData.firstName),
+                pfScore,
                 max(
-                  score(this.firstName, userMergeData.penultimateName),
-                  score(this.firstName, userMergeData.firstName),
+                  fpScore,
+                  ffScore,
                 ),
               ),
             ),
@@ -189,12 +191,12 @@ class UserMerger(val botFilter: BotFilter? = null) {
 
           heap.add(
             min(
-              score(this.firstName, userMergeData.firstName),
+              ffScore,
               max(
-                score(this.penultimateName, userMergeData.firstName),
+                pfScore,
                 max(
-                  score(this.firstName, userMergeData.penultimateName),
-                  score(this.firstName, userMergeData.firstName),
+                  fpScore,
+                  ffScore,
                 ),
               ),
             ),
@@ -206,7 +208,7 @@ class UserMerger(val botFilter: BotFilter? = null) {
         } else {
           heap.add(
             min(
-              score(this.firstName, userMergeData.firstName),
+              ffScore,
               score(this.lastName, userMergeData.lastName),
             ),
           )
