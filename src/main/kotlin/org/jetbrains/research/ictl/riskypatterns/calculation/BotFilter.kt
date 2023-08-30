@@ -31,5 +31,4 @@ class BotFilter(private val botsParts: Collection<String> = emptySet()) {
   fun isBot(userInfo: UserInfo): Boolean {
     return checkEmail(userInfo.userEmail) || checkName(userInfo.userName)
   }
-
 }

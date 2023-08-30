@@ -1,11 +1,9 @@
 package org.jetbrains.research.ictl.riskypatterns.calculation
 
-import org.eclipse.jgit.internal.storage.file.FileRepository
 import org.eclipse.jgit.lib.Repository
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.NMaxHeap
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserInfo
 import org.jetbrains.research.ictl.riskypatterns.jgit.CommitsProvider
-import java.io.File
 import kotlin.math.max
 import kotlin.math.min
 
@@ -45,7 +43,6 @@ class UserMerger(val botFilter: BotFilter? = null) {
         }
         return result.split(" ")
       }
-
 
       fun levenshtein(lhs: CharSequence, rhs: CharSequence): Int {
         if (lhs == rhs) {
@@ -218,7 +215,6 @@ class UserMerger(val botFilter: BotFilter? = null) {
               score(this.lastName, userMergeData.firstName),
             ),
           )
-
         }
       }
 
@@ -250,7 +246,6 @@ class UserMerger(val botFilter: BotFilter? = null) {
       }
       return false
     }
-
   }
 
   private fun MutableSet<UserInfo>.addNoBot(userInfo: UserInfo) {

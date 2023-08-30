@@ -14,8 +14,10 @@ class UserMapper() : Mapper() {
   private var botFilter: BotFilter? = null
   private val nameToUserId = HashMap<String, Int>()
 
-  constructor(botFilter: BotFilter? = null,
-              mergedUsers: Collection<Collection<UserInfo>> = emptyList()) : this() {
+  constructor(
+    botFilter: BotFilter? = null,
+    mergedUsers: Collection<Collection<UserInfo>> = emptyList(),
+  ) : this() {
     this.botFilter = botFilter
     for (userEmails in mergedUsers) {
       addUserEmails(userEmails)

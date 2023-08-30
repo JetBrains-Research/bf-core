@@ -40,7 +40,7 @@ open class BusFactor {
     commitsInfo: Iterable<CommitInfo>,
     filePathsToBytes: Iterable<FileInfo>,
     botFilter: BotFilter? = null,
-    mergedUsers: Collection<Collection<UserInfo>> = emptyList()
+    mergedUsers: Collection<Collection<UserInfo>> = emptyList(),
   ): Tree {
     val userMapper = UserMapper(botFilter, mergedUsers)
     val context = BusFactorComputationContext(userMapper)

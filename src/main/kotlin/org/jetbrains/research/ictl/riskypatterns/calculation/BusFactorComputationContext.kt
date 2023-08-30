@@ -30,8 +30,10 @@ data class BusFactorComputationContext(
   val userMapper: UserMapper = UserMapper(),
   val fileMapper: FileMapper = FileMapper(),
 ) {
-  constructor(botFilter: BotFilter? = null,
-              mergedUsers: Collection<Collection<UserInfo>> = emptyList()) : this(UserMapper(botFilter, mergedUsers))
+  constructor(
+    botFilter: BotFilter? = null,
+    mergedUsers: Collection<Collection<UserInfo>> = emptyList(),
+  ) : this(UserMapper(botFilter, mergedUsers))
 
   // [fileId] = ownership
   val filesOwnership: MutableMap<Int, OwnershipPerUser> = HashMap()
