@@ -6,11 +6,11 @@ plugins {
   kotlin("plugin.serialization").version("1.8.20")
   `maven-publish`
 
-  id("org.jlleitschuh.gradle.ktlint") version "11.2.0"
+  id("org.jlleitschuh.gradle.ktlint") version "11.5.1"
 }
 
 group = "org.jetbrains.research.ictl"
-version = "0.0.4"
+version = "0.0.5"
 
 repositories {
   mavenCentral()

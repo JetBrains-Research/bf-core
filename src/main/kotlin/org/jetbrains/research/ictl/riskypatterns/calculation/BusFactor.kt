@@ -3,12 +3,14 @@ package org.jetbrains.research.ictl.riskypatterns.calculation
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.CommitInfo
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.FileInfo
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.Tree
+import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserInfo
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserVis
+import org.jetbrains.research.ictl.riskypatterns.calculation.mappers.UserMapper
 import org.jetbrains.research.ictl.riskypatterns.calculation.processors.CommitProcessor
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-open class BusFactor(private val botsLogins: Set<String> = emptySet()) {
+open class BusFactor {
 
   companion object {
     val log: Logger = LoggerFactory.getLogger(BusFactor::class.java)
@@ -37,8 +39,11 @@ open class BusFactor(private val botsLogins: Set<String> = emptySet()) {
     repositoryName: String,
     commitsInfo: Iterable<CommitInfo>,
     filePathsToBytes: Iterable<FileInfo>,
+    botFilter: BotFilter? = null,
+    mergedUsers: Collection<Collection<UserInfo>> = emptyList(),
   ): Tree {
-    val context = BusFactorComputationContext(botsLogins = botsLogins)
+    val userMapper = UserMapper(botFilter, mergedUsers)
+    val context = BusFactorComputationContext(userMapper)
     val commitProcessor = CommitProcessor(context)
 
     proceedCommits(commitProcessor, commitsInfo)

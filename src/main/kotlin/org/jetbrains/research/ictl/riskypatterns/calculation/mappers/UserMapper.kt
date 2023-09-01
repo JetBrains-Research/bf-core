@@ -2,18 +2,27 @@ package org.jetbrains.research.ictl.riskypatterns.calculation.mappers
 
 import kotlinx.serialization.Serializable
 import org.eclipse.jgit.revwalk.RevCommit
+import org.jetbrains.research.ictl.riskypatterns.calculation.BotFilter
+import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserInfo
 
 /**
  * Stores Space user ids (emails if no user id is available)
  */
 
 @Serializable
-class UserMapper(private val botsLogins: Set<String> = emptySet()) : Mapper() {
-  companion object {
-    val defaultBots = setOf("dependabot", "[bot]")
-  }
-
+class UserMapper() : Mapper() {
+  private var botFilter: BotFilter? = null
   private val nameToUserId = HashMap<String, Int>()
+
+  constructor(
+    botFilter: BotFilter? = null,
+    mergedUsers: Collection<Collection<UserInfo>> = emptyList(),
+  ) : this() {
+    this.botFilter = botFilter
+    for (userEmails in mergedUsers) {
+      addUserEmails(userEmails)
+    }
+  }
 
   fun add(commit: RevCommit): Int {
     val email = commit.authorIdent.emailAddress
@@ -26,6 +35,14 @@ class UserMapper(private val botsLogins: Set<String> = emptySet()) : Mapper() {
       val id = add(lowercaseName)
       nameToUserId[lowercaseName] = id
       id
+    }
+  }
+
+  private fun addUserEmails(emails: Collection<UserInfo>) {
+    val id = add(emails.first().userEmail.lowercase())
+    for (email in emails) {
+      val lowercaseEmail = email.userEmail.lowercase()
+      entityToId[lowercaseEmail] = id
     }
   }
 
@@ -44,5 +61,5 @@ class UserMapper(private val botsLogins: Set<String> = emptySet()) : Mapper() {
     return id
   }
 
-  fun isBot(email: String) = botsLogins.any { email.contains(it) } || defaultBots.any { email.contains(it) }
+  fun isBot(email: String, name: String = "") = botFilter?.isBot(email, name) ?: false
 }

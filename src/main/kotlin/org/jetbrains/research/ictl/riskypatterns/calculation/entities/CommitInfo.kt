@@ -1,8 +1,8 @@
 package org.jetbrains.research.ictl.riskypatterns.calculation.entities
 
 data class CommitInfo(
-  val authorEmail: String,
-  val committerEmail: String,
+  val authorUserInfo: UserInfo,
+  val committerUserInfo: UserInfo,
   val authorCommitTimestamp: Long,
   val committerTimestamp: Long,
   val diffEntries: Collection<DiffEntry>,

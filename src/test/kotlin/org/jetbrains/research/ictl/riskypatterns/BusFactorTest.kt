@@ -5,8 +5,11 @@ import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.internal.storage.file.FileRepository
 import org.eclipse.jgit.lib.RepositoryCache
 import org.eclipse.jgit.util.FS
+import org.jetbrains.research.ictl.riskypatterns.calculation.BotFilter
 import org.jetbrains.research.ictl.riskypatterns.calculation.BusFactor
+import org.jetbrains.research.ictl.riskypatterns.calculation.UserMerger
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.Tree
+import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserInfo
 import org.jetbrains.research.ictl.riskypatterns.jgit.CommitsProvider
 import org.jetbrains.research.ictl.riskypatterns.jgit.FileInfoProvider
 import org.junit.jupiter.api.BeforeEach
@@ -21,7 +24,11 @@ class BusFactorTest {
     private val localTestData = File("src/test/testData/")
     private val repositoryDir = File(localTestData, "repository")
     private val gitFile = File(repositoryDir, ".git")
-    private val previousResult = File(localTestData, "bf_result")
+    private val mergedUsersResult = File(localTestData, "user_merge_result")
+    private val cleanBFResult = File(localTestData, "bf_result")
+    private val botFilterMergedUsersBFResult = File(localTestData, "bf_botFilter_mergedUsers_result")
+    private val botFilterBFResult = File(localTestData, "bf_botFilter_result")
+    private val mergedUsersBFResult = File(localTestData, "bf_mergedUsers_result")
   }
 
   @BeforeEach
@@ -47,15 +54,52 @@ class BusFactorTest {
   }
 
   @Test
-  fun compareWithPreviousVersion() {
+  fun compareWithPreviousVersion() = runBFTest(cleanBFResult)
+
+  @Test
+  fun testUserMerger() {
+    val repository = FileRepository(gitFile)
+    val botFilter = BotFilter()
+    val merger = UserMerger(botFilter)
+    val users = merger.mergeUsers(repository)
+    val testUsers = Json.decodeFromString<Collection<Collection<UserInfo>>>(mergedUsersResult.readText())
+    assertEquals(users, testUsers)
+  }
+
+  @Test
+  fun testBFUserMergerBotFilter() = runBFTest(botFilterMergedUsersBFResult, useBotFilter = true, useUserMerger = true)
+
+  @Test
+  fun testBFUserMerger() = runBFTest(mergedUsersBFResult, useBotFilter = false, useUserMerger = true)
+
+  @Test
+  fun testBFBotFilter() = runBFTest(botFilterBFResult, useBotFilter = true, useUserMerger = false)
+
+  private fun runBFTest(previousResultFile: File, useBotFilter: Boolean = false, useUserMerger: Boolean = false) {
+    var botFilter: BotFilter? = null
+    var mergedUsers: Collection<Collection<UserInfo>> = emptyList()
+    val repository = FileRepository(gitFile)
+
+    if (useBotFilter) {
+      botFilter = BotFilter()
+    }
+    if (useUserMerger) {
+      botFilter = BotFilter()
+      val merger = UserMerger(botFilter)
+      mergedUsers = merger.mergeUsers(repository)
+    }
+
+    val tree = runBF(botFilter, mergedUsers)
+    val treeTest = Json.decodeFromString<Tree>(previousResultFile.readText())
+    compareTrees(tree, treeTest)
+  }
+
+  private fun runBF(botFilter: BotFilter? = null, mergedUsers: Collection<Collection<UserInfo>> = emptyList()): Tree {
     val bf = BusFactor()
     val repository = FileRepository(gitFile)
     val commitsProvider = CommitsProvider(repository)
     val fileInfoProvider = FileInfoProvider(repository)
-    val tree = bf.calculate("test", commitsProvider, fileInfoProvider)
-    val json = Json { encodeDefaults = false }
-    val treeTest = json.decodeFromString<Tree>(previousResult.readText())
-    compareTrees(tree, treeTest)
+    return bf.calculate("test", commitsProvider, fileInfoProvider, botFilter, mergedUsers)
   }
 
   private fun compareTrees(tree1: Tree, tree2: Tree) {

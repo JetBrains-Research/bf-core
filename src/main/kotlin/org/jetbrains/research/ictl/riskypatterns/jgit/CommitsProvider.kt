@@ -15,10 +15,11 @@ import org.eclipse.jgit.util.io.NullOutputStream
 import org.jetbrains.research.ictl.riskypatterns.calculation.BusFactorConstants
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.CommitInfo
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.DiffEntry
+import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserInfo
 import java.time.Duration
 import java.util.*
 
-class CommitsProvider(private val repository: Repository, private val dayGap: Long = BusFactorConstants.daysGap) : Iterable<CommitInfo> {
+class CommitsProvider(private val repository: Repository, private val dayGap: Long = BusFactorConstants.DAYS_GAP) : Iterable<CommitInfo> {
   override fun iterator(): Iterator<CommitInfo> = RepoIterator(repository, dayGap)
 
   class RepoIterator(private val repository: Repository, private val dayGap: Long) : Iterator<CommitInfo>, AutoCloseable {
@@ -31,13 +32,6 @@ class CommitsProvider(private val repository: Repository, private val dayGap: Lo
           ChangeType.MODIFY -> DiffEntry.ChangeType.MODIFY
           ChangeType.COPY -> DiffEntry.ChangeType.COPY
           ChangeType.DELETE -> DiffEntry.ChangeType.DELETE
-        }
-      }
-
-      fun getFilePath(diffEntry: org.eclipse.jgit.diff.DiffEntry): String {
-        return when (diffEntry.changeType) {
-          ChangeType.DELETE -> diffEntry.oldPath
-          else -> diffEntry.newPath
         }
       }
     }
@@ -108,9 +102,12 @@ class CommitsProvider(private val repository: Repository, private val dayGap: Lo
       val numOfParents = commit.parents.size
       val fullMessage = commit.fullMessage
 
+      val authorUserInfo = UserInfo(commit.authorIdent.name, authorEmail)
+      val committerUserInfo = UserInfo(commit.committerIdent.name, committerEmail)
+
       return CommitInfo(
-        authorEmail,
-        committerEmail,
+        authorUserInfo,
+        committerUserInfo,
         authorCommitTimestamp,
         committerTimestamp,
         diffEntries,

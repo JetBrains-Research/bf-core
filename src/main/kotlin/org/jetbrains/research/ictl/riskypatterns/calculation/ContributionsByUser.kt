@@ -26,7 +26,7 @@ class ContributionsByUser {
     val date = Date(timestamp)
     val latestDate = Date(latestCommitTimestamp)
     val passedDays = TimeUnit.DAYS.convert(latestDate.time - date.time, TimeUnit.MILLISECONDS)
-    return exp(-1.0 * passedDays / BusFactorConstants.decayCharacteristicTime)
+    return exp(-1.0 * passedDays / BusFactorConstants.DECAY_CHARACTERISTIC_TIME)
   }
 
   fun addFileChange(commitTimestamp: Long, latestCommitTimestamp: Long): Double {
@@ -42,12 +42,12 @@ class ContributionsByUser {
   }
 
   fun isMajor(): Boolean {
-    if (BusFactorConstants.newFormula) {
-      return authorship >= BusFactorConstants.authorshipThresholdNew &&
-        normalizedAuthorship > BusFactorConstants.normalizedAuthorshipThreshold
+    if (BusFactorConstants.NEW_FORMULA) {
+      return authorship >= BusFactorConstants.AUTHORSHIP_THRESHOLD_NEW &&
+        normalizedAuthorship > BusFactorConstants.NORMALIZED_AUTHORSHIP_THRESHOLD
     }
 
-    return authorship >= BusFactorConstants.authorshipThreshold &&
-      normalizedAuthorship > BusFactorConstants.normalizedAuthorshipThreshold
+    return authorship >= BusFactorConstants.AUTHORSHIP_THRESHOLD &&
+      normalizedAuthorship > BusFactorConstants.NORMALIZED_AUTHORSHIP_THRESHOLD
   }
 }

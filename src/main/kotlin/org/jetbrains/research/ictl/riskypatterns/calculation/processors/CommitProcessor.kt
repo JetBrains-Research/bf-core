@@ -4,14 +4,13 @@ import org.jetbrains.research.ictl.riskypatterns.calculation.BusFactorComputatio
 import org.jetbrains.research.ictl.riskypatterns.calculation.ContributionsByUser
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.CommitInfo
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.DiffEntry
-import java.util.concurrent.ConcurrentHashMap
 
 class CommitProcessor(private val context: BusFactorComputationContext) {
 
   companion object {
-    private const val reviewStartToken = "Reviewed-by: "
-    private const val coAuthorStartToken = "Co-authored-by: "
-    private const val reviewersSplit = ", "
+    private const val REVIEW_START_TOKEN = "Reviewed-by: "
+    private const val CO_AUTHOR_START_TOKEN = "Co-authored-by: "
+    private const val REVIEWERS_SPLIT = ", "
 
     fun getFilePath(diffEntry: DiffEntry): String {
       return when (diffEntry.changeType) {
@@ -26,13 +25,13 @@ class CommitProcessor(private val context: BusFactorComputationContext) {
   }
 
   private fun getReviewers(message: String): List<String> {
-    val idx = message.indexOf(reviewStartToken)
+    val idx = message.indexOf(REVIEW_START_TOKEN)
     if (idx == -1) return emptyList()
 
-    val line = message.substring(idx + reviewStartToken.length)
+    val line = message.substring(idx + REVIEW_START_TOKEN.length)
     val newLineIdx = line.indexOf("\n")
     val reviewersLine = if (newLineIdx == -1) line else line.substring(0, newLineIdx)
-    return reviewersLine.split(reviewersSplit)
+    return reviewersLine.split(REVIEWERS_SPLIT)
   }
 
   /**
@@ -57,25 +56,6 @@ class CommitProcessor(private val context: BusFactorComputationContext) {
         pair
       } else {
         if (v.second > weight) v else pair
-      }
-    }
-  }
-
-  /**
-   * This function is for tracking file modification: we want to get the file ID,
-   * track the file for code reviews in the CommitMapper, and save data about change in filesOwnershipPrototypes
-   */
-  private fun modifyDiff(diffEntry: DiffEntry, authorCommitTimestamp: Long, userIds: Set<Int>) {
-    val filePath = getFilePath(diffEntry)
-    val fileId = context.fileMapper.getOrNull(filePath)
-
-    if (fileId == null) {
-      addDiff(diffEntry, authorCommitTimestamp, userIds)
-    } else {
-      userIds.forEach {
-        context.filesOwnership.computeIfAbsent(fileId) { ConcurrentHashMap() }
-          .computeIfAbsent(it) { ContributionsByUser() }
-          .addFileChange(authorCommitTimestamp, context.lastCommitCommitterTimestamp)
       }
     }
   }
@@ -119,19 +99,20 @@ class CommitProcessor(private val context: BusFactorComputationContext) {
     }
   }
 
-  private fun deleteDiff(diffEntry: DiffEntry) {
-    val filePath = getFilePath(diffEntry)
-    val fileId = context.fileMapper.getOrNull(filePath)!!
-  }
-
   fun processCommit(commitInfo: CommitInfo): Boolean {
     if (commitInfo.numOfParents > 1) return false
 
-    val authors = getAuthors(commitInfo).filter { !context.userMapper.isBot(it) }
+    val authors = getAuthorsNameEmailPairs(commitInfo).filter {
+      val (name, email) = it
+      !context.userMapper.isBot(email, name)
+    }
     if (authors.isEmpty()) {
       return false
     }
-    val userIds = authors.map { context.userMapper.addEmail(it) }.toSet()
+    val userIds = authors.map {
+      val (_, email) = it
+      context.userMapper.addEmail(email)
+    }.toSet()
     val authorCommitTimestamp = commitInfo.authorCommitTimestamp
 
     for (diffEntry in commitInfo.diffEntries) {
@@ -170,17 +151,21 @@ class CommitProcessor(private val context: BusFactorComputationContext) {
     }
   }
 
-  private fun getAuthors(commit: CommitInfo): Set<String> {
-    val result = mutableSetOf<String>()
+  private fun getAuthorsNameEmailPairs(commit: CommitInfo): Set<Pair<String, String>> {
+    val result = mutableSetOf<Pair<String, String>>()
     val msg = commit.fullMessage
     for (line in msg.split("\n")) {
-      if (line.startsWith(coAuthorStartToken)) {
-        val email = line.trim().split(" ").last().removePrefix("<").removeSuffix(">")
-        result.add(email)
+      if (line.startsWith(CO_AUTHOR_START_TOKEN)) {
+        val nameEmail = line.removePrefix(CO_AUTHOR_START_TOKEN)
+        val emailStart = nameEmail.indexOfLast { it == '<' }
+        val email = nameEmail.substring(emailStart + 1, nameEmail.lastIndex)
+        val name = nameEmail.substring(0, emailStart)
+        result.add(name to email)
       }
     }
-    val author = commit.authorEmail
-    result.add(author)
+    val authorName = commit.authorUserInfo.userName
+    val authorEmail = commit.authorUserInfo.userEmail
+    result.add(authorName to authorEmail)
     return result
   }
 }
