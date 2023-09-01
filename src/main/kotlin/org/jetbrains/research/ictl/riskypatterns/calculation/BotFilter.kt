@@ -9,13 +9,14 @@ class BotFilter(private val botsParts: Collection<String> = emptySet()) {
     val defaultBotParts = setOf("dependabot", "[bot]", "testingbot")
     val defaultEmailBots = setOf("info@testingbot", "noreply@github.com")
     val defaultNameBots = setOf("GitHub", "TestingBot")
+    val botRegex = Regex("\\bbot\\b")
   }
 
   private fun checkName(name: String): Boolean {
     return botsParts.any { name.contains(it) } ||
       defaultBotParts.any { name.contains(it) } ||
       defaultNameBots.any { name.contains(it) } ||
-      name.lowercase().contains(Regex("\\bbot\\b"))
+      name.lowercase().contains(botRegex)
   }
 
   private fun checkEmail(email: String): Boolean {
