@@ -2,7 +2,6 @@ package org.jetbrains.research.ictl.riskypatterns.calculation.entities
 
 import kotlinx.serialization.Serializable
 
-
 @Serializable
 data class UserVis(val email: String, val authorship: Double, val normalizedAuthorship: Double? = null) {
   companion object {

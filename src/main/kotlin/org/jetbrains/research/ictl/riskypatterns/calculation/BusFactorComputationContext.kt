@@ -3,7 +3,6 @@ package org.jetbrains.research.ictl.riskypatterns.calculation
 import kotlinx.serialization.Serializable
 import org.jetbrains.research.ictl.riskypatterns.calculation.BusFactor.Companion.isMainContributor
 import org.jetbrains.research.ictl.riskypatterns.calculation.BusFactor.Companion.isMinorContributor
-import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserInfo
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserStats
 import org.jetbrains.research.ictl.riskypatterns.calculation.mappers.FileMapper
 import org.jetbrains.research.ictl.riskypatterns.calculation.mappers.UserMapper
