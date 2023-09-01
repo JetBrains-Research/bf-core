@@ -28,18 +28,6 @@ data class Tree(
     return result
   }
 
-  fun untilNotSingle(): List<Tree> {
-    if (this.children.size != 1) return emptyList()
-
-    var node = this.children.first()
-    val same = mutableListOf(node)
-    while (node.children.size == 1) {
-      node = node.children.first()
-      same.add(node)
-    }
-    return same
-  }
-
   fun getNode(filePath: String): Tree? {
     val parts = filePath.split("/")
     var node = this
@@ -50,31 +38,3 @@ data class Tree(
   }
 }
 
-@Serializable
-data class UserVis(val email: String, val authorship: Double, val normalizedAuthorship: Double? = null) {
-  companion object {
-    private fun formatDouble(value: Double) = String.format("%.4f", value).toDouble()
-
-    fun convert(userStats: Map<String, UserStats>, developersSorted: Set<String>): List<UserVis> {
-      val result = mutableListOf<UserVis>()
-
-      for (mainAuthor in developersSorted) {
-        result.add(UserVis(mainAuthor, userStats[mainAuthor]!!))
-      }
-
-      for ((email, stats) in userStats) {
-        if (email in developersSorted) {
-          continue
-        }
-        result.add(UserVis(email, stats))
-      }
-      return result
-    }
-  }
-
-  constructor(email: String, stats: UserStats) : this(
-    email,
-    formatDouble(stats.contributionsByUser.authorship),
-    formatDouble(stats.contributionsByUser.normalizedAuthorship),
-  )
-}

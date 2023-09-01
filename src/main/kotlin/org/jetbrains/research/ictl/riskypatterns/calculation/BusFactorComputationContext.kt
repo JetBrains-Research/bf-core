@@ -10,16 +10,17 @@ import org.jetbrains.research.ictl.riskypatterns.calculation.mappers.UserMapper
 
 @Serializable
 data class BusFactorConfigSnapshot(
-  val useFilter: Boolean,
   val useReviewers: Boolean,
   val weightedAuthorship: Boolean,
   val ignoreExtensions: Set<String>,
 ) {
   companion object {
+    private const val DEFAULT_USE_REVIEWERS = false
+    private const val DEFAULT_WEIGHTED_AUTHORSHIP = true
+
     fun getDefault() = BusFactorConfigSnapshot(
-      false,
-      false,
-      true,
+      DEFAULT_USE_REVIEWERS,
+      DEFAULT_WEIGHTED_AUTHORSHIP,
       setOf(),
     )
   }
@@ -30,10 +31,6 @@ data class BusFactorComputationContext(
   val userMapper: UserMapper = UserMapper(),
   val fileMapper: FileMapper = FileMapper(),
 ) {
-  constructor(
-    botFilter: BotFilter? = null,
-    mergedUsers: Collection<Collection<UserInfo>> = emptyList(),
-  ) : this(UserMapper(botFilter, mergedUsers))
 
   // [fileId] = ownership
   val filesOwnership: MutableMap<Int, OwnershipPerUser> = HashMap()

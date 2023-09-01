@@ -19,7 +19,7 @@ import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserInfo
 import java.time.Duration
 import java.util.*
 
-class CommitsProvider(private val repository: Repository, private val dayGap: Long = BusFactorConstants.daysGap) : Iterable<CommitInfo> {
+class CommitsProvider(private val repository: Repository, private val dayGap: Long = BusFactorConstants.DAYS_GAP) : Iterable<CommitInfo> {
   override fun iterator(): Iterator<CommitInfo> = RepoIterator(repository, dayGap)
 
   class RepoIterator(private val repository: Repository, private val dayGap: Long) : Iterator<CommitInfo>, AutoCloseable {

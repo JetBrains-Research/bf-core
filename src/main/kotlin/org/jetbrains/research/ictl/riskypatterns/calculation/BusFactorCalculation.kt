@@ -1,6 +1,6 @@
 package org.jetbrains.research.ictl.riskypatterns.calculation
 
-import org.jetbrains.research.ictl.riskypatterns.calculation.BusFactorConstants.newFormula
+import org.jetbrains.research.ictl.riskypatterns.calculation.BusFactorConstants.NEW_FORMULA
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.BusFactorCalculationResult
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.BusFactorStatus
 import kotlin.math.ln
@@ -13,14 +13,6 @@ class BusFactorCalculation(
 
   init {
     computeAuthorship(context.configSnapshot.weightedAuthorship)
-  }
-
-  private fun getMajor(): Map<Int, MutableSet<Int>> {
-    val majorContributors: HashMap<Int, MutableSet<Int>> = HashMap()
-    for ((key, value) in context.filesOwnership) {
-      majorContributors[key] = value.filter { it.value.isMajor() }.keys.toMutableSet()
-    }
-    return majorContributors
   }
 
   private fun getMajor(fileIds: Collection<Int>): Map<Int, MutableSet<Int>> {
@@ -118,10 +110,10 @@ class BusFactorCalculation(
     otherUsersReviews: Int = 0,
     timeAtMeetings: Double = 0.0,
   ): Double {
-    return BusFactorConstants.shift + BusFactorConstants.ownershipSlope * ownership +
-      BusFactorConstants.commitsSlope * userCommits - BusFactorConstants.otherCommitsSlope * ln(1.0 + otherUsersCommits) +
-      BusFactorConstants.reviewsSlope * userReviews - BusFactorConstants.otherReviewsSlope * ln(1.0 + otherUsersReviews) +
-      BusFactorConstants.meetingsSlope * timeAtMeetings
+    return BusFactorConstants.SHIFT + BusFactorConstants.OWNERSHIP_SLOPE * ownership +
+      BusFactorConstants.COMMITS_SLOPE * userCommits - BusFactorConstants.OTHER_COMMITS_SLOPE * ln(1.0 + otherUsersCommits) +
+      BusFactorConstants.REVIEWS_SLOPE * userReviews - BusFactorConstants.OTHER_REVIEWS_SLOPE * ln(1.0 + otherUsersReviews) +
+      BusFactorConstants.MEETINGS_SLOPE * timeAtMeetings
   }
 
   private fun calcWeightedUserToFileAuthorship(
@@ -132,10 +124,10 @@ class BusFactorCalculation(
     weightedOtherReviews: Double = 0.0,
     weightedTimeAtMeetings: Double = 0.0,
   ): Double {
-    return BusFactorConstants.shift + BusFactorConstants.ownershipSlope * weightedOwnership +
-      BusFactorConstants.commitsSlope * weightedCommits - BusFactorConstants.otherCommitsSlope * ln(1.0 + weightedOtherCommits) +
-      BusFactorConstants.reviewsSlope * weightedReviews - BusFactorConstants.otherReviewsSlope * ln(1.0 + weightedOtherReviews) +
-      BusFactorConstants.meetingsSlope * weightedTimeAtMeetings
+    return BusFactorConstants.SHIFT + BusFactorConstants.OWNERSHIP_SLOPE * weightedOwnership +
+      BusFactorConstants.COMMITS_SLOPE * weightedCommits - BusFactorConstants.OTHER_COMMITS_SLOPE * ln(1.0 + weightedOtherCommits) +
+      BusFactorConstants.REVIEWS_SLOPE * weightedReviews - BusFactorConstants.OTHER_REVIEWS_SLOPE * ln(1.0 + weightedOtherReviews) +
+      BusFactorConstants.MEETINGS_SLOPE * weightedTimeAtMeetings
   }
 
   private fun calcNewUserToFileAuthorship(
@@ -148,12 +140,12 @@ class BusFactorCalculation(
     weightedOtherReviews: Double = 0.0,
     weightedTimeAtMeetings: Double = 0.0,
   ): Double {
-    return BusFactorConstants.authorshipSlopeNew * weightedOwnership + BusFactorConstants.commitsSlopeNew * weightedCommits +
-      BusFactorConstants.reviewsSlopeNew * weightedReviews + BusFactorConstants.meetingsSlopeNew * weightedTimeAtMeetings +
-      BusFactorConstants.otherCommitsSlopeNew * ln(1 + weightedAllCommits) + BusFactorConstants.otherReviewsSlopeNew * ln(
+    return BusFactorConstants.AUTHORSHIP_SLOPE_NEW * weightedOwnership + BusFactorConstants.COMMITS_SLOPE_NEW * weightedCommits +
+      BusFactorConstants.REVIEWS_SLOPE_NEW * weightedReviews + BusFactorConstants.MEETINGS_SLOPE_NEW * weightedTimeAtMeetings +
+      BusFactorConstants.OTHER_COMMITS_SLOPE_NEW * ln(1 + weightedAllCommits) + BusFactorConstants.OTHER_REVIEWS_SLOPE_NEW * ln(
       1 + weightedAllReviews,
     ) -
-      BusFactorConstants.otherCommitsSlopeNew * ln(1 + weightedOtherCommits) - BusFactorConstants.otherReviewsSlopeNew * ln(
+      BusFactorConstants.OTHER_COMMITS_SLOPE_NEW * ln(1 + weightedOtherCommits) - BusFactorConstants.OTHER_REVIEWS_SLOPE_NEW * ln(
       1 + weightedOtherReviews,
     )
   }
@@ -174,7 +166,7 @@ class BusFactorCalculation(
           val weightedReviews = userContribution.weightedReviews
           val weightedOtherReviews = totalWeightedReviews - userContribution.weightedReviews
 
-          if (!newFormula) {
+          if (!NEW_FORMULA) {
             userContribution.authorship = calcWeightedUserToFileAuthorship(
               weightedOwnership,
               weightedCommits,
