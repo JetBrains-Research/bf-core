@@ -116,8 +116,10 @@ class BusFactorTest {
     return bfProvider.calculate(TREE_NAME, commitsProvider, fileInfoProvider, botFilter, mergedUsers)
   }
 
-  private fun runBFConsumer(botFilter: BotFilter? = null,
-                            mergedUsers: Collection<Collection<UserInfo>> = emptyList()): Tree {
+  private fun runBFConsumer(
+    botFilter: BotFilter? = null,
+    mergedUsers: Collection<Collection<UserInfo>> = emptyList(),
+  ): Tree {
     val bfConsumer = BusFactorConsumer(botFilter, mergedUsers)
     val repository = FileRepository(gitFile)
     val commitsProvider = CommitsProvider(repository)
@@ -126,7 +128,6 @@ class BusFactorTest {
     }
     val fileInfoProvider = FileInfoProvider(repository)
     return bfConsumer.calculate(TREE_NAME, fileInfoProvider)
-
   }
 
   private fun compareTrees(tree1: Tree, tree2: Tree) {

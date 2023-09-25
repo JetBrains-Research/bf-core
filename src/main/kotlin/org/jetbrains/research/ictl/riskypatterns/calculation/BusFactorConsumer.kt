@@ -32,7 +32,4 @@ class BusFactorConsumer(
 
     return root
   }
-
-
 }
-

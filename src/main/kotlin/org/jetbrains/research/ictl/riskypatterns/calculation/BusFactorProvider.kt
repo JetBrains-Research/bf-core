@@ -7,7 +7,7 @@ import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserInfo
 import org.jetbrains.research.ictl.riskypatterns.calculation.mappers.UserMapper
 import org.jetbrains.research.ictl.riskypatterns.calculation.processors.CommitProcessor
 
-class BusFactorProvider: BusFactor() {
+class BusFactorProvider : BusFactor() {
 
   fun calculate(
     repositoryName: String,
@@ -28,5 +28,4 @@ class BusFactorProvider: BusFactor() {
     calculateBusFactorForTree(root, busFactorCalculation)
     return root
   }
-
 }

@@ -3,9 +3,7 @@ package org.jetbrains.research.ictl.riskypatterns.calculation
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.CommitInfo
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.FileInfo
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.Tree
-import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserInfo
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserVis
-import org.jetbrains.research.ictl.riskypatterns.calculation.mappers.UserMapper
 import org.jetbrains.research.ictl.riskypatterns.calculation.processors.CommitProcessor
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
