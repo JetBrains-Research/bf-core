@@ -82,5 +82,5 @@ class UserMapper() : Mapper() {
 
   fun isBot(email: String, name: String = "") = botFilter?.isBot(email, name) ?: false
 
-  fun isBot(userInfo: UserInfo) = botFilter?.isBot(userInfo.userEmail, userInfo.userName) ?: false
+  fun isBot(userInfo: UserInfo) = isBot(userInfo.userEmail, userInfo.userName)
 }
