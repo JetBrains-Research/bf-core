@@ -3,6 +3,7 @@ package org.jetbrains.research.ictl.riskypatterns.calculation
 import org.eclipse.jgit.lib.Repository
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.NMaxHeap
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserInfo
+import org.jetbrains.research.ictl.riskypatterns.calculation.processors.CommitProcessor
 import org.jetbrains.research.ictl.riskypatterns.jgit.CommitsProvider
 import kotlin.math.max
 import kotlin.math.min
@@ -260,6 +261,9 @@ class UserMerger(val botFilter: BotFilter? = null) {
     for (commit in commitsProvider) {
       set.addNoBot(commit.authorUserInfo)
       set.addNoBot(commit.committerUserInfo)
+      CommitProcessor.getCoAuthorsFromMSG(commit.fullMessage).forEach {
+        set.addNoBot(it)
+      }
     }
 
     val users = mutableListOf<UserInfo>()

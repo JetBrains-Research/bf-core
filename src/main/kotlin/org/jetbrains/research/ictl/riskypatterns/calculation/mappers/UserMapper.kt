@@ -1,7 +1,6 @@
 package org.jetbrains.research.ictl.riskypatterns.calculation.mappers
 
 import kotlinx.serialization.Serializable
-import org.eclipse.jgit.revwalk.RevCommit
 import org.jetbrains.research.ictl.riskypatterns.calculation.BotFilter
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserInfo
 
@@ -12,7 +11,8 @@ import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserInfo
 @Serializable
 class UserMapper() : Mapper() {
   private var botFilter: BotFilter? = null
-  private val nameToUserId = HashMap<String, Int>()
+  private val reviewerNameToUserId = HashMap<String, Int>()
+  private val idToName = HashMap<Int, String>()
 
   constructor(
     botFilter: BotFilter? = null,
@@ -24,42 +24,54 @@ class UserMapper() : Mapper() {
     }
   }
 
-  fun add(commit: RevCommit): Int {
-    val email = commit.authorIdent.emailAddress
-    return addEmail(email)
-  }
-
-  fun addName(name: String): Int {
+  // TODO: change logic, reuse merger
+  fun addReviewerName(name: String): Int {
     val lowercaseName = name.lowercase()
-    return nameToUserId[lowercaseName] ?: run {
+    return reviewerNameToUserId[lowercaseName] ?: run {
       val id = add(lowercaseName)
-      nameToUserId[lowercaseName] = id
+      reviewerNameToUserId[lowercaseName] = id
       id
     }
   }
 
   private fun addUserEmails(emails: Collection<UserInfo>) {
     val id = add(emails.first().userEmail.lowercase())
+    val name = emails.first().userName
     for (email in emails) {
       val lowercaseEmail = email.userEmail.lowercase()
       entityToId[lowercaseEmail] = id
     }
+    idToName[id] = name
   }
 
-  fun addEmail(email: String): Int {
+  fun addUser(userInfo: UserInfo) = addUser(userInfo.userName, userInfo.userEmail)
+
+  fun addUser(name: String, email: String): Int {
     val lowercaseEmail = email.lowercase()
-    val name = lowercaseEmail.split("@").first()
-    if (contains(name)) {
-      val id = entityToId.remove(name)!!
+    val nameForReviewer = lowercaseEmail.split("@").first()
+    if (contains(nameForReviewer)) {
+      val id = entityToId.remove(nameForReviewer)!!
       entityToId[lowercaseEmail] = id
       idToEntity[id] = lowercaseEmail
-      nameToUserId[name] = id
+      reviewerNameToUserId[nameForReviewer] = id
       return id
     }
     val id = add(lowercaseEmail)
-    nameToUserId[name] = id
+    reviewerNameToUserId[nameForReviewer] = id
+    idToName[id] = name
     return id
   }
 
+  fun getNameToEmailMap(): Map<String, String> {
+    val result = HashMap<String, String>()
+    for ((id, email) in idToEntity) {
+      val name = idToName[id]!!
+      result[email] = name
+    }
+    return result
+  }
+
   fun isBot(email: String, name: String = "") = botFilter?.isBot(email, name) ?: false
+
+  fun isBot(userInfo: UserInfo) = isBot(userInfo.userEmail, userInfo.userName)
 }

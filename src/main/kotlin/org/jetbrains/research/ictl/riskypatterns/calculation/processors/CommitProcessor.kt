@@ -4,6 +4,7 @@ import org.jetbrains.research.ictl.riskypatterns.calculation.BusFactorComputatio
 import org.jetbrains.research.ictl.riskypatterns.calculation.ContributionsByUser
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.CommitInfo
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.DiffEntry
+import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserInfo
 
 class CommitProcessor(private val context: BusFactorComputationContext) {
 
@@ -17,6 +18,20 @@ class CommitProcessor(private val context: BusFactorComputationContext) {
         DiffEntry.ChangeType.DELETE -> diffEntry.oldPath
         else -> diffEntry.newPath
       }
+    }
+
+    fun getCoAuthorsFromMSG(message: String): Set<UserInfo> {
+      val result = mutableSetOf<UserInfo>()
+      for (line in message.split("\n")) {
+        if (line.startsWith(CO_AUTHOR_START_TOKEN)) {
+          val nameEmail = line.trim().removePrefix(CO_AUTHOR_START_TOKEN)
+          val emailStart = nameEmail.indexOfLast { it == '<' }
+          val email = nameEmail.substring(emailStart + 1, nameEmail.lastIndex).trim()
+          val name = nameEmail.substring(0, emailStart).trim()
+          result.add(UserInfo(name, email))
+        }
+      }
+      return result
     }
   }
 
@@ -103,16 +118,14 @@ class CommitProcessor(private val context: BusFactorComputationContext) {
     if (commitInfo.numOfParents > 1) return false
 
     val authors = getAuthorsNameEmailPairs(commitInfo).filter {
-      val (name, email) = it
-      !context.userMapper.isBot(email, name)
+      !context.userMapper.isBot(it)
     }
     if (authors.isEmpty()) {
       return false
     }
-    val userIds = authors.map {
-      val (_, email) = it
-      context.userMapper.addEmail(email)
-    }.toSet()
+    val userIds: Set<Int> = authors.mapTo(mutableSetOf()) {
+      context.userMapper.addUser(it)
+    }
     val authorCommitTimestamp = commitInfo.authorCommitTimestamp
 
     for (diffEntry in commitInfo.diffEntries) {
@@ -144,28 +157,19 @@ class CommitProcessor(private val context: BusFactorComputationContext) {
     val filePath = getFilePath(diffEntry)
     val fileId = context.fileMapper.getOrNull(filePath)!!
     for (reviewer in reviewers) {
-      val userId = context.userMapper.addName(reviewer)
+      val userId = context.userMapper.addReviewerName(reviewer)
       context.filesOwnership.computeIfAbsent(fileId) { HashMap() }
         .computeIfAbsent(userId) { ContributionsByUser() }
         .addReview(authorCommitTimestamp, context.lastCommitCommitterTimestamp)
     }
   }
 
-  private fun getAuthorsNameEmailPairs(commit: CommitInfo): Set<Pair<String, String>> {
-    val result = mutableSetOf<Pair<String, String>>()
-    val msg = commit.fullMessage
-    for (line in msg.split("\n")) {
-      if (line.startsWith(CO_AUTHOR_START_TOKEN)) {
-        val nameEmail = line.removePrefix(CO_AUTHOR_START_TOKEN)
-        val emailStart = nameEmail.indexOfLast { it == '<' }
-        val email = nameEmail.substring(emailStart + 1, nameEmail.lastIndex)
-        val name = nameEmail.substring(0, emailStart)
-        result.add(name to email)
-      }
-    }
+  private fun getAuthorsNameEmailPairs(commit: CommitInfo): Set<UserInfo> {
+    val result = mutableSetOf<UserInfo>()
+    result.addAll(getCoAuthorsFromMSG(commit.fullMessage))
     val authorName = commit.authorUserInfo.userName
     val authorEmail = commit.authorUserInfo.userEmail
-    result.add(authorName to authorEmail)
+    result.add(UserInfo(authorName, authorEmail))
     return result
   }
 }
