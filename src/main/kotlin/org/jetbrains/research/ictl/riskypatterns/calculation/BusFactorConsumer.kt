@@ -4,8 +4,6 @@ import org.jetbrains.research.ictl.riskypatterns.calculation.entities.CommitInfo
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.FileInfo
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.Tree
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserInfo
-import org.jetbrains.research.ictl.riskypatterns.calculation.mappers.UserMapper
-import org.jetbrains.research.ictl.riskypatterns.calculation.processors.CommitProcessor
 class BusFactorConsumer(
   repositoryName: String,
   botFilter: BotFilter? = null,
