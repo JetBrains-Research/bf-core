@@ -3,12 +3,18 @@ package org.jetbrains.research.ictl.riskypatterns.calculation
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.CommitInfo
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.FileInfo
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.Tree
+import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserInfo
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserVis
+import org.jetbrains.research.ictl.riskypatterns.calculation.mappers.UserMapper
 import org.jetbrains.research.ictl.riskypatterns.calculation.processors.CommitProcessor
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-abstract class BusFactor {
+abstract class BusFactor(
+  val repositoryName: String,
+  botFilter: BotFilter? = null,
+  mergedUsers: Collection<Collection<UserInfo>> = emptyList(),
+) {
 
   companion object {
     val log: Logger = LoggerFactory.getLogger(BusFactor::class.java)
@@ -33,16 +39,19 @@ abstract class BusFactor {
       (normalizedUserAuthorship > 0.75) && (userAuthorship > 1)
   }
 
-  protected fun proceedCommits(commitProcessor: CommitProcessor, commitsInfo: Iterable<CommitInfo>) {
-    val lastCommit = commitsInfo.first()
-    commitProcessor.setLastCommit(lastCommit.committerTimestamp)
-    for (commit in commitsInfo) {
-      processCommit(commit, commitProcessor)
-    }
+  protected val userMapper = UserMapper(botFilter, mergedUsers)
+  protected val context = BusFactorComputationContext(userMapper)
+  protected val commitProcessor = CommitProcessor(context)
+
+  protected open fun processCommit(commitInfo: CommitInfo): Boolean {
+    return commitProcessor.processCommit(commitInfo)
   }
 
-  protected open fun processCommit(commitInfo: CommitInfo, commitProcessor: CommitProcessor): Boolean {
-    return commitProcessor.processCommit(commitInfo)
+  fun getBusFactorForTree(filePathsToBytes: Iterable<FileInfo>): Tree {
+    val busFactorCalculation = BusFactorCalculation(context)
+    val root = buildTree(filePathsToBytes)
+    calculateBusFactorForTree(root, busFactorCalculation)
+    return root
   }
 
   protected fun calculateBusFactorForTree(root: Tree, busFactorCalculation: BusFactorCalculation) {
@@ -67,7 +76,7 @@ abstract class BusFactor {
   }
 
   // fixme: add filter for files
-  protected fun buildTree(repositoryName: String, filePathsToBytes: Iterable<FileInfo>): Tree {
+  protected fun buildTree(filePathsToBytes: Iterable<FileInfo>): Tree {
     val root = Tree(repositoryName, ".")
     var allSize = 0L
     filePathsToBytes.forEach { (filePath, bytes) ->

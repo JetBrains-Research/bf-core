@@ -109,25 +109,25 @@ class BusFactorTest {
   }
 
   private fun runBFProvider(botFilter: BotFilter? = null, mergedUsers: Collection<Collection<UserInfo>> = emptyList()): Tree {
-    val bfProvider = BusFactorProvider()
+    val bfProvider = BusFactorProvider(TREE_NAME, botFilter, mergedUsers)
     val repository = FileRepository(gitFile)
     val commitsProvider = CommitsProvider(repository)
     val fileInfoProvider = FileInfoProvider(repository)
-    return bfProvider.calculate(TREE_NAME, commitsProvider, fileInfoProvider, botFilter, mergedUsers)
+    return bfProvider.calculate(commitsProvider, fileInfoProvider)
   }
 
   private fun runBFConsumer(
     botFilter: BotFilter? = null,
     mergedUsers: Collection<Collection<UserInfo>> = emptyList(),
   ): Tree {
-    val bfConsumer = BusFactorConsumer(botFilter, mergedUsers)
+    val bfConsumer = BusFactorConsumer(TREE_NAME, botFilter, mergedUsers)
     val repository = FileRepository(gitFile)
     val commitsProvider = CommitsProvider(repository)
     for (commitInfo in commitsProvider) {
-      bfConsumer.processCommit(commitInfo)
+      bfConsumer.consumeCommit(commitInfo)
     }
     val fileInfoProvider = FileInfoProvider(repository)
-    return bfConsumer.calculate(TREE_NAME, fileInfoProvider)
+    return bfConsumer.calculate(fileInfoProvider)
   }
 
   private fun compareTrees(tree1: Tree, tree2: Tree) {
@@ -138,6 +138,9 @@ class BusFactorTest {
 
       val usersSize1 = node1.users.size
       val usersSize2 = node2.users.size
+      println(node1.users)
+      println(node2.users)
+
       assertEquals(usersSize1, usersSize2, "Not equal number of users.")
 
       val onlyInNode1 = node1.users.mapTo(mutableSetOf()) { it.email } - node2.users.mapTo(mutableSetOf()) { it.email }
