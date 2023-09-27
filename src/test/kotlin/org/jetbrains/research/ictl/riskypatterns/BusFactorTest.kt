@@ -138,8 +138,6 @@ class BusFactorTest {
 
       val usersSize1 = node1.users.size
       val usersSize2 = node2.users.size
-      println(node1.users)
-      println(node2.users)
 
       assertEquals(usersSize1, usersSize2, "Not equal number of users.")
 
