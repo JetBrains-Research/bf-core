@@ -96,4 +96,6 @@ abstract class BusFactor(
     root.bytes = allSize
     return root
   }
+
+  fun getNameToEmailMap() = userMapper.getNameToEmailMap()
 }

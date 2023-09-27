@@ -1,17 +1,8 @@
 package org.jetbrains.research.ictl.riskypatterns.calculation.mappers
 
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
-import org.eclipse.jgit.internal.storage.file.FileRepository
 import org.jetbrains.research.ictl.riskypatterns.calculation.BotFilter
-import org.jetbrains.research.ictl.riskypatterns.calculation.BusFactor
-import org.jetbrains.research.ictl.riskypatterns.calculation.BusFactorProvider
-import org.jetbrains.research.ictl.riskypatterns.calculation.UserMerger
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserInfo
-import org.jetbrains.research.ictl.riskypatterns.jgit.CommitsProvider
-import org.jetbrains.research.ictl.riskypatterns.jgit.FileInfoProvider
-import java.io.File
 
 /**
  * Stores Space user ids (emails if no user id is available)
@@ -71,7 +62,7 @@ class UserMapper() : Mapper() {
     return id
   }
 
-  fun getMapEmailToName(): Map<String, String> {
+  fun getNameToEmailMap(): Map<String, String> {
     val result = HashMap<String, String>()
     for ((id, email) in idToEntity) {
       val name = idToName[id]!!
