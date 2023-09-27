@@ -53,6 +53,8 @@ class UserMapper() : Mapper() {
     idToName[id] = name
   }
 
+  fun addUser(userInfo: UserInfo) = addUser(userInfo.userName, userInfo.userEmail)
+
   fun addUser(name: String, email: String): Int {
     val lowercaseEmail = email.lowercase()
     val nameForReviewer = lowercaseEmail.split("@").first()
@@ -79,4 +81,6 @@ class UserMapper() : Mapper() {
   }
 
   fun isBot(email: String, name: String = "") = botFilter?.isBot(email, name) ?: false
+
+  fun isBot(userInfo: UserInfo) = botFilter?.isBot(userInfo.userEmail, userInfo.userName) ?: false
 }

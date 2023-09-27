@@ -118,16 +118,14 @@ class CommitProcessor(private val context: BusFactorComputationContext) {
     if (commitInfo.numOfParents > 1) return false
 
     val authors = getAuthorsNameEmailPairs(commitInfo).filter {
-      val (name, email) = it
-      !context.userMapper.isBot(email, name)
+      !context.userMapper.isBot(it)
     }
     if (authors.isEmpty()) {
       return false
     }
-    val userIds = authors.map {
-      val (name, email) = it
-      context.userMapper.addUser(name, email)
-    }.toSet()
+    val userIds: Set<Int> = authors.mapTo(mutableSetOf()) {
+      context.userMapper.addUser(it)
+    }
     val authorCommitTimestamp = commitInfo.authorCommitTimestamp
 
     for (diffEntry in commitInfo.diffEntries) {
@@ -166,12 +164,12 @@ class CommitProcessor(private val context: BusFactorComputationContext) {
     }
   }
 
-  private fun getAuthorsNameEmailPairs(commit: CommitInfo): Set<Pair<String, String>> {
-    val result = mutableSetOf<Pair<String, String>>()
-    result.addAll(getCoAuthorsFromMSG(commit.fullMessage).map { it.userName to it.userEmail })
+  private fun getAuthorsNameEmailPairs(commit: CommitInfo): Set<UserInfo> {
+    val result = mutableSetOf<UserInfo>()
+    result.addAll(getCoAuthorsFromMSG(commit.fullMessage))
     val authorName = commit.authorUserInfo.userName
     val authorEmail = commit.authorUserInfo.userEmail
-    result.add(authorName to authorEmail)
+    result.add(UserInfo(authorName, authorEmail))
     return result
   }
 }
