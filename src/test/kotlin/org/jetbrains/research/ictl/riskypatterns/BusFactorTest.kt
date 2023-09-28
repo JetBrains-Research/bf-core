@@ -1,6 +1,5 @@
 package org.jetbrains.research.ictl.riskypatterns
 
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.internal.storage.file.FileRepository
