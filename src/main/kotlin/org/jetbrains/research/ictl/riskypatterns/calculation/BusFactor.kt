@@ -40,15 +40,16 @@ class BusFactor(
   }
 
   private val userMapper = UserMapper(botFilter, mergedUsers)
-  private val context = BusFactorComputationContext(userMapper)
-  private val commitProcessor = CommitProcessor(context)
+  private val _context = BusFactorComputationContext(userMapper)
+  val context: BFContext = _context
+  private val commitProcessor = CommitProcessor(_context)
 
   protected open fun processCommit(commitInfo: CommitInfo): Boolean {
     return commitProcessor.processCommit(commitInfo)
   }
 
   fun getBusFactorForTree(filePathsToBytes: Iterable<FileInfo>): Tree {
-    val busFactorCalculation = BusFactorCalculation(context)
+    val busFactorCalculation = BusFactorCalculation(_context)
     val root = buildTree(filePathsToBytes)
     calculateBusFactorForTree(root, busFactorCalculation)
     return root

@@ -27,18 +27,20 @@ data class BusFactorConfigSnapshot(
 
 @Serializable
 data class BusFactorComputationContext(
-  val userMapper: UserMapper = UserMapper(),
-  val fileMapper: FileMapper = FileMapper(),
-) {
+  override val userMapper: UserMapper = UserMapper(),
+  override val fileMapper: FileMapper = FileMapper(),
+) : BFContext {
 
   // [fileId] = ownership
-  val filesOwnership: MutableMap<Int, OwnershipPerUser> = HashMap()
+  override val filesOwnership: MutableMap<Int, OwnershipPerUser> = HashMap()
 
   //  [fileId] = (userId, weightedOwnership)
-  val weightedOwnership: MutableMap<Int, Pair<Int, Double>> = HashMap()
+  override val weightedOwnership: MutableMap<Int, Pair<Int, Double>> = HashMap()
 
   var lastCommitCommitterTimestamp: Long = -1
-  var configSnapshot: BusFactorConfigSnapshot = BusFactorConfigSnapshot.getDefault()
+
+  // TODO: get out or change
+  val configSnapshot: BusFactorConfigSnapshot = BusFactorConfigSnapshot.getDefault()
 
   fun checkData(fileNames: List<String>): Boolean {
     for (fileName in fileNames) {

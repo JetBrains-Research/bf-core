@@ -1,5 +1,6 @@
 package org.jetbrains.research.ictl.riskypatterns
 
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.internal.storage.file.FileRepository
@@ -92,7 +93,6 @@ class BusFactorTest {
   private fun runBFTest(previousResultFile: File, useBotFilter: Boolean = false, useUserMerger: Boolean = false) {
     var botFilter: BotFilter? = null
     var mergedUsers: Collection<Collection<UserInfo>> = emptyList()
-    val repository = FileRepository(gitFile)
 
     if (useBotFilter) {
       botFilter = BotFilter()
