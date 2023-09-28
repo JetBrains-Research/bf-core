@@ -10,6 +10,7 @@ import org.jetbrains.research.ictl.riskypatterns.calculation.BusFactor
 import org.jetbrains.research.ictl.riskypatterns.calculation.UserMerger
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.Tree
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserInfo
+import org.jetbrains.research.ictl.riskypatterns.calculation.processors.CommitProcessor
 import org.jetbrains.research.ictl.riskypatterns.jgit.CommitsProvider
 import org.jetbrains.research.ictl.riskypatterns.jgit.FileInfoProvider
 import org.junit.jupiter.api.BeforeEach
@@ -59,12 +60,12 @@ class BusFactorTest {
 
   @Test
   fun testUserMerger() {
-    val repository = FileRepository(gitFile)
     val botFilter = BotFilter()
     val merger = UserMerger(botFilter)
-    val users = merger.mergeUsers(repository)
+    val users = getUsers()
+    val mergedUsers = merger.mergeUsers(users)
     val testUsers = Json.decodeFromString<Collection<Collection<UserInfo>>>(mergedUsersResult.readText())
-    assertEquals(users, testUsers)
+    assertEquals(mergedUsers, testUsers)
   }
 
   @Test
@@ -79,9 +80,9 @@ class BusFactorTest {
   @Test
   fun compareConsumerAndProvider() {
     val botFilter = BotFilter()
-    val repository = FileRepository(gitFile)
     val merger = UserMerger(botFilter)
-    val mergedUsers = merger.mergeUsers(repository)
+    val users = getUsers()
+    val mergedUsers = merger.mergeUsers(users)
 
     val tree1 = runBF(botFilter, mergedUsers)
     val tree2 = runBFConsumer(botFilter, mergedUsers)
@@ -99,7 +100,8 @@ class BusFactorTest {
     if (useUserMerger) {
       botFilter = BotFilter()
       val merger = UserMerger(botFilter)
-      mergedUsers = merger.mergeUsers(repository)
+      val users = getUsers()
+      mergedUsers = merger.mergeUsers(users)
     }
 
     val tree = runBF(botFilter, mergedUsers)
@@ -113,7 +115,7 @@ class BusFactorTest {
     val commitsProvider = CommitsProvider(repository)
     val fileInfoProvider = FileInfoProvider(repository)
     bf.proceedCommits(commitsProvider)
-    return bf.calculate( fileInfoProvider)
+    return bf.calculate(fileInfoProvider)
   }
 
   private fun runBFConsumer(
@@ -156,5 +158,19 @@ class BusFactorTest {
       val nodeBF2 = node2.busFactorStatus!!.busFactor
       assertEquals(nodeBF1, nodeBF2)
     }
+  }
+
+  private fun getUsers(): Set<UserInfo> {
+    val repository = FileRepository(gitFile)
+    val commitsProvider = CommitsProvider(repository)
+    val set = mutableSetOf<UserInfo>()
+    for (commit in commitsProvider) {
+      set.add(commit.authorUserInfo)
+      set.add(commit.committerUserInfo)
+      CommitProcessor.getCoAuthorsFromMSG(commit.fullMessage).forEach {
+        set.add(it)
+      }
+    }
+    return set
   }
 }

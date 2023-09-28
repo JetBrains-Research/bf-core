@@ -21,10 +21,10 @@ dependencies {
   implementation("ch.qos.logback:logback-classic:$logback_version")
   implementation("net.logstash.logback:logstash-logback-encoder:7.3")
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
-  implementation("org.eclipse.jgit:org.eclipse.jgit:6.3.0.202209071007-r")
 
   testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
   testImplementation("org.junit.jupiter:junit-jupiter:5.9.2")
+  testImplementation("org.eclipse.jgit:org.eclipse.jgit:6.3.0.202209071007-r")
 }
 
 tasks {
