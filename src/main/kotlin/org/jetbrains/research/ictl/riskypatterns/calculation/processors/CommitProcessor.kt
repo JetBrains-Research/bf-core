@@ -117,6 +117,11 @@ class CommitProcessor(private val context: BusFactorComputationContext) {
   fun processCommit(commitInfo: CommitInfo): Boolean {
     if (commitInfo.numOfParents > 1) return false
 
+    val timestamp = commitInfo.committerTimestamp
+    if (context.lastCommitCommitterTimestamp < timestamp) {
+      context.lastCommitCommitterTimestamp = timestamp
+    }
+
     val authors = getAuthorsNameEmailPairs(commitInfo).filter {
       !context.userMapper.isBot(it)
     }

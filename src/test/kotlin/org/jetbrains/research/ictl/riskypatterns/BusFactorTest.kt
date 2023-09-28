@@ -6,8 +6,7 @@ import org.eclipse.jgit.internal.storage.file.FileRepository
 import org.eclipse.jgit.lib.RepositoryCache
 import org.eclipse.jgit.util.FS
 import org.jetbrains.research.ictl.riskypatterns.calculation.BotFilter
-import org.jetbrains.research.ictl.riskypatterns.calculation.BusFactorConsumer
-import org.jetbrains.research.ictl.riskypatterns.calculation.BusFactorProvider
+import org.jetbrains.research.ictl.riskypatterns.calculation.BusFactor
 import org.jetbrains.research.ictl.riskypatterns.calculation.UserMerger
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.Tree
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserInfo
@@ -84,7 +83,7 @@ class BusFactorTest {
     val merger = UserMerger(botFilter)
     val mergedUsers = merger.mergeUsers(repository)
 
-    val tree1 = runBFProvider(botFilter, mergedUsers)
+    val tree1 = runBF(botFilter, mergedUsers)
     val tree2 = runBFConsumer(botFilter, mergedUsers)
     compareTrees(tree1, tree2)
   }
@@ -103,24 +102,25 @@ class BusFactorTest {
       mergedUsers = merger.mergeUsers(repository)
     }
 
-    val tree = runBFProvider(botFilter, mergedUsers)
+    val tree = runBF(botFilter, mergedUsers)
     val treeTest = Json.decodeFromString<Tree>(previousResultFile.readText())
     compareTrees(tree, treeTest)
   }
 
-  private fun runBFProvider(botFilter: BotFilter? = null, mergedUsers: Collection<Collection<UserInfo>> = emptyList()): Tree {
-    val bfProvider = BusFactorProvider(TREE_NAME, botFilter, mergedUsers)
+  private fun runBF(botFilter: BotFilter? = null, mergedUsers: Collection<Collection<UserInfo>> = emptyList()): Tree {
+    val bf = BusFactor(TREE_NAME, botFilter, mergedUsers)
     val repository = FileRepository(gitFile)
     val commitsProvider = CommitsProvider(repository)
     val fileInfoProvider = FileInfoProvider(repository)
-    return bfProvider.calculate(commitsProvider, fileInfoProvider)
+    bf.proceedCommits(commitsProvider)
+    return bf.calculate( fileInfoProvider)
   }
 
   private fun runBFConsumer(
     botFilter: BotFilter? = null,
     mergedUsers: Collection<Collection<UserInfo>> = emptyList(),
   ): Tree {
-    val bfConsumer = BusFactorConsumer(TREE_NAME, botFilter, mergedUsers)
+    val bfConsumer = BusFactor(TREE_NAME, botFilter, mergedUsers)
     val repository = FileRepository(gitFile)
     val commitsProvider = CommitsProvider(repository)
     for (commitInfo in commitsProvider) {

@@ -10,7 +10,7 @@ import org.jetbrains.research.ictl.riskypatterns.calculation.processors.CommitPr
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-abstract class BusFactor(
+class BusFactor(
   val repositoryName: String,
   botFilter: BotFilter? = null,
   mergedUsers: Collection<Collection<UserInfo>> = emptyList(),
@@ -39,9 +39,9 @@ abstract class BusFactor(
       (normalizedUserAuthorship > 0.75) && (userAuthorship > 1)
   }
 
-  protected val userMapper = UserMapper(botFilter, mergedUsers)
-  protected val context = BusFactorComputationContext(userMapper)
-  protected val commitProcessor = CommitProcessor(context)
+  private val userMapper = UserMapper(botFilter, mergedUsers)
+  private val context = BusFactorComputationContext(userMapper)
+  private val commitProcessor = CommitProcessor(context)
 
   protected open fun processCommit(commitInfo: CommitInfo): Boolean {
     return commitProcessor.processCommit(commitInfo)
@@ -98,4 +98,18 @@ abstract class BusFactor(
   }
 
   fun getNameToEmailMap() = userMapper.getNameToEmailMap()
+
+  fun proceedCommits(commitsInfo: Iterable<CommitInfo>) {
+    for (commit in commitsInfo) {
+      processCommit(commit)
+    }
+  }
+
+  fun consumeCommit(commitInfo: CommitInfo) = processCommit(commitInfo)
+
+  fun calculate(
+    filePathsToBytes: Iterable<FileInfo>,
+  ): Tree {
+    return getBusFactorForTree(filePathsToBytes)
+  }
 }
