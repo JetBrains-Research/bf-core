@@ -44,7 +44,7 @@ class BusFactor(
   val context: BFContext = _context
   private val commitProcessor = CommitProcessor(_context)
 
-  protected open fun processCommit(commitInfo: CommitInfo): Boolean {
+  private fun processCommit(commitInfo: CommitInfo): Boolean {
     return commitProcessor.processCommit(commitInfo)
   }
 
@@ -55,7 +55,7 @@ class BusFactor(
     return root
   }
 
-  protected fun calculateBusFactorForTree(root: Tree, busFactorCalculation: BusFactorCalculation) {
+  private fun calculateBusFactorForTree(root: Tree, busFactorCalculation: BusFactorCalculation) {
     val queue = ArrayDeque<Tree>()
     queue.add(root)
 
@@ -77,7 +77,7 @@ class BusFactor(
   }
 
   // fixme: add filter for files
-  protected fun buildTree(filePathsToBytes: Iterable<FileInfo>): Tree {
+  private fun buildTree(filePathsToBytes: Iterable<FileInfo>): Tree {
     val root = Tree(repositoryName, ".")
     var allSize = 0L
     filePathsToBytes.forEach { (filePath, bytes) ->
