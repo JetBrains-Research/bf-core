@@ -9,6 +9,7 @@ import org.jetbrains.research.ictl.riskypatterns.calculation.mappers.UserMapper
 
 @Serializable
 data class BusFactorComputationContext(
+  val configSnapshot: BusFactorConfigSnapshot = BusFactorConfigSnapshot.getDefault(),
   override val userMapper: UserMapper = UserMapper(),
   override val fileMapper: FileMapper = FileMapper(),
 ) : BFContext {
@@ -20,9 +21,6 @@ data class BusFactorComputationContext(
   override val weightedOwnership: MutableMap<Int, Pair<Int, Double>> = HashMap()
 
   var lastCommitCommitterTimestamp: Long = -1
-
-  // TODO: get out or change
-  val configSnapshot: BusFactorConfigSnapshot = BusFactorConfigSnapshot.getDefault()
 
   fun checkData(fileNames: List<String>): Boolean {
     for (fileName in fileNames) {

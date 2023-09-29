@@ -14,6 +14,7 @@ class BusFactor(
   val repositoryName: String,
   botFilter: BotFilter? = null,
   mergedUsers: Collection<Collection<UserInfo>> = emptyList(),
+  configSnapshot: BusFactorConfigSnapshot = BusFactorConfigSnapshot.getDefault(),
 ) {
 
   companion object {
@@ -40,7 +41,7 @@ class BusFactor(
   }
 
   private val userMapper = UserMapper(botFilter, mergedUsers)
-  private val _context = BusFactorComputationContext(userMapper)
+  private val _context = BusFactorComputationContext(configSnapshot, userMapper)
   val context: BFContext = _context
   private val commitProcessor = CommitProcessor(_context)
 
