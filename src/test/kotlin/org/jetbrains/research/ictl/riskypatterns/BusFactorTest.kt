@@ -113,6 +113,7 @@ class BusFactorTest {
     val repository = FileRepository(gitFile)
     val commitsProvider = CommitsProvider(repository)
     val fileInfoProvider = FileInfoProvider(repository)
+    bf.setLastCommit(commitsProvider.first())
     bf.proceedCommits(commitsProvider)
     return bf.calculate(TREE_NAME, fileInfoProvider)
   }
@@ -124,6 +125,7 @@ class BusFactorTest {
     val bfConsumer = BusFactor(botFilter, mergedUsers)
     val repository = FileRepository(gitFile)
     val commitsProvider = CommitsProvider(repository)
+    bfConsumer.setLastCommit(commitsProvider.first())
     for (commitInfo in commitsProvider) {
       bfConsumer.consumeCommit(commitInfo)
     }

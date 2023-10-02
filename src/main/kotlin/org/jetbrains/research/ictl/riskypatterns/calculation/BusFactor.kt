@@ -94,6 +94,11 @@ class BusFactor(context: BusFactorComputationContext) {
     return root
   }
 
+  fun setLastCommit(lastCommitInfo: CommitInfo) {
+    _context.lastCommitCommitterTimestamp = lastCommitInfo.committerTimestamp
+    _context.lastCommitHash = lastCommitInfo.hash
+  }
+
   fun proceedCommits(commitsInfo: Iterable<CommitInfo>) {
     for (commitInfo in commitsInfo) {
       commitProcessor.processCommit(commitInfo)
