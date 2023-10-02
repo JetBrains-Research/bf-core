@@ -116,6 +116,7 @@ class CommitProcessor(private val context: BusFactorComputationContext) {
     val timestamp = commitInfo.committerTimestamp
     if (context.lastCommitCommitterTimestamp < timestamp) {
       context.lastCommitCommitterTimestamp = timestamp
+      context.lastCommitHash = commitInfo.hash
     }
 
     val authors = getAuthorsNameEmailPairs(commitInfo).filter {
