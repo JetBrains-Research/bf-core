@@ -121,7 +121,7 @@ class BusFactorTest {
     botFilter: BotFilter? = null,
     mergedUsers: Collection<Collection<UserInfo>> = emptyList(),
   ): Tree {
-    val bfConsumer = BusFactor( botFilter, mergedUsers)
+    val bfConsumer = BusFactor(botFilter, mergedUsers)
     val repository = FileRepository(gitFile)
     val commitsProvider = CommitsProvider(repository)
     for (commitInfo in commitsProvider) {
