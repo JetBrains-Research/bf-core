@@ -25,11 +25,12 @@ class BotFilter(private val botsParts: Collection<String> = emptySet()) {
       defaultEmailBots.any { email.contains(it) }
   }
 
-  fun isBot(email: String, name: String): Boolean {
-    return checkEmail(email) || checkName(name)
-  }
+  fun isBot(email: String, name: String): Boolean =
+    checkEmail(email) || checkName(name)
 
-  fun isBot(userInfo: UserInfo): Boolean {
-    return checkEmail(userInfo.userEmail) || checkName(userInfo.userName)
-  }
+  fun isBot(userInfo: UserInfo): Boolean = isBot(userInfo.userEmail, userInfo.userName)
+
+  fun isNotBot(email: String, name: String) = !isBot(email, name)
+
+  fun isNotBot(userInfo: UserInfo) = !isBot(userInfo)
 }

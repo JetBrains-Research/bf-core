@@ -3,7 +3,7 @@ package org.jetbrains.research.ictl.riskypatterns.calculation.mappers
 import kotlinx.serialization.Serializable
 
 @Serializable
-class FileMapper : Mapper() {
+class FileMapper : AbstractMapper(), IFileMapper {
 
   fun trackMove(oldPath: String, newPath: String): Pair<Int, Int> {
     // Files can be renamed, and sometimes from the Git point of view this looks like Copy + Delete.
@@ -18,7 +18,7 @@ class FileMapper : Mapper() {
     return oldId to newId
   }
 
-  fun getRealFileId(fileId: Int): Int {
+  override fun getRealFileId(fileId: Int): Int {
     val value = getOrNull(fileId)!!
     return getOrNull(value)!!
   }

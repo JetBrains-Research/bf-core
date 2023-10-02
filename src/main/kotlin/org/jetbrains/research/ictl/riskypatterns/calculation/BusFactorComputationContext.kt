@@ -8,37 +8,19 @@ import org.jetbrains.research.ictl.riskypatterns.calculation.mappers.FileMapper
 import org.jetbrains.research.ictl.riskypatterns.calculation.mappers.UserMapper
 
 @Serializable
-data class BusFactorConfigSnapshot(
-  val useReviewers: Boolean,
-  val weightedAuthorship: Boolean,
-  val ignoreExtensions: Set<String>,
-) {
-  companion object {
-    private const val DEFAULT_USE_REVIEWERS = false
-    private const val DEFAULT_WEIGHTED_AUTHORSHIP = true
-
-    fun getDefault() = BusFactorConfigSnapshot(
-      DEFAULT_USE_REVIEWERS,
-      DEFAULT_WEIGHTED_AUTHORSHIP,
-      setOf(),
-    )
-  }
-}
-
-@Serializable
 data class BusFactorComputationContext(
-  val userMapper: UserMapper = UserMapper(),
-  val fileMapper: FileMapper = FileMapper(),
-) {
+  val configSnapshot: BusFactorConfigSnapshot = BusFactorConfigSnapshot.getDefault(),
+  override val userMapper: UserMapper = UserMapper(),
+  override val fileMapper: FileMapper = FileMapper(),
+) : BFContext {
 
   // [fileId] = ownership
-  val filesOwnership: MutableMap<Int, OwnershipPerUser> = HashMap()
+  override val filesOwnership: MutableMap<Int, OwnershipPerUser> = HashMap()
 
   //  [fileId] = (userId, weightedOwnership)
-  val weightedOwnership: MutableMap<Int, Pair<Int, Double>> = HashMap()
+  override val weightedOwnership: MutableMap<Int, Pair<Int, Double>> = HashMap()
 
   var lastCommitCommitterTimestamp: Long = -1
-  var configSnapshot: BusFactorConfigSnapshot = BusFactorConfigSnapshot.getDefault()
 
   fun checkData(fileNames: List<String>): Boolean {
     for (fileName in fileNames) {

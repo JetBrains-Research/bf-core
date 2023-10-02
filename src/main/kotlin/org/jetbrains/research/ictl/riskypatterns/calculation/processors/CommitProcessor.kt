@@ -35,10 +35,6 @@ class CommitProcessor(private val context: BusFactorComputationContext) {
     }
   }
 
-  fun setLastCommit(lastCommitTimestamp: Long) {
-    context.lastCommitCommitterTimestamp = lastCommitTimestamp
-  }
-
   private fun getReviewers(message: String): List<String> {
     val idx = message.indexOf(REVIEW_START_TOKEN)
     if (idx == -1) return emptyList()
@@ -116,6 +112,11 @@ class CommitProcessor(private val context: BusFactorComputationContext) {
 
   fun processCommit(commitInfo: CommitInfo): Boolean {
     if (commitInfo.numOfParents > 1) return false
+
+    val timestamp = commitInfo.committerTimestamp
+    if (context.lastCommitCommitterTimestamp < timestamp) {
+      context.lastCommitCommitterTimestamp = timestamp
+    }
 
     val authors = getAuthorsNameEmailPairs(commitInfo).filter {
       !context.userMapper.isBot(it)

@@ -9,10 +9,10 @@ import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserInfo
  */
 
 @Serializable
-class UserMapper() : Mapper() {
+class UserMapper() : AbstractMapper(), IUserMapper {
   private var botFilter: BotFilter? = null
-  private val reviewerNameToUserId = HashMap<String, Int>()
-  private val idToName = HashMap<Int, String>()
+  override val reviewerNameToUserId = HashMap<String, Int>()
+  override val idToName = HashMap<Int, String>()
 
   constructor(
     botFilter: BotFilter? = null,
@@ -62,7 +62,7 @@ class UserMapper() : Mapper() {
     return id
   }
 
-  fun getNameToEmailMap(): Map<String, String> {
+  override fun getNameToEmailMap(): Map<String, String> {
     val result = HashMap<String, String>()
     for ((id, email) in idToEntity) {
       val name = idToName[id]!!

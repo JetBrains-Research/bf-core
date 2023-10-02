@@ -1,10 +1,7 @@
 package org.jetbrains.research.ictl.riskypatterns.calculation
 
-import org.eclipse.jgit.lib.Repository
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.NMaxHeap
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserInfo
-import org.jetbrains.research.ictl.riskypatterns.calculation.processors.CommitProcessor
-import org.jetbrains.research.ictl.riskypatterns.jgit.CommitsProvider
 import kotlin.math.max
 import kotlin.math.min
 
@@ -249,34 +246,9 @@ class UserMerger(val botFilter: BotFilter? = null) {
     }
   }
 
-  private fun MutableSet<UserInfo>.addNoBot(userInfo: UserInfo) {
-    if (botFilter?.isBot(userInfo) == false) {
-      this.add(userInfo)
-    }
-  }
-
-  fun mergeUsers(repository: Repository): Collection<Collection<UserInfo>> {
-    val commitsProvider = CommitsProvider(repository)
-    val set = mutableSetOf<UserInfo>()
-    for (commit in commitsProvider) {
-      set.addNoBot(commit.authorUserInfo)
-      set.addNoBot(commit.committerUserInfo)
-      CommitProcessor.getCoAuthorsFromMSG(commit.fullMessage).forEach {
-        set.addNoBot(it)
-      }
-    }
-
-    val users = mutableListOf<UserInfo>()
-    for (userInfo in set) {
-      if (botFilter?.isBot(userInfo) == false) {
-        users.add(userInfo)
-      }
-    }
-    return mergeUsers(users)
-  }
-
-  fun mergeUsers(usersInfo: Collection<UserInfo>): Collection<Collection<UserInfo>> {
-    val userMergeData = usersInfo.map { UserMergeData(it) }
+  fun mergeUsers(usersInfo: Iterable<UserInfo>): Collection<Collection<UserInfo>> {
+    val filteredUsers = usersInfo.filter { botFilter?.isNotBot(it) ?: true }
+    val userMergeData = filteredUsers.map { UserMergeData(it) }
     var id = 0
     for ((idx1, user1) in userMergeData.withIndex()) {
       if (user1.authorId == -1) {

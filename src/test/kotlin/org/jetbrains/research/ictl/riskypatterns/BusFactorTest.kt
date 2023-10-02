@@ -6,11 +6,11 @@ import org.eclipse.jgit.internal.storage.file.FileRepository
 import org.eclipse.jgit.lib.RepositoryCache
 import org.eclipse.jgit.util.FS
 import org.jetbrains.research.ictl.riskypatterns.calculation.BotFilter
-import org.jetbrains.research.ictl.riskypatterns.calculation.BusFactorConsumer
-import org.jetbrains.research.ictl.riskypatterns.calculation.BusFactorProvider
+import org.jetbrains.research.ictl.riskypatterns.calculation.BusFactor
 import org.jetbrains.research.ictl.riskypatterns.calculation.UserMerger
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.Tree
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserInfo
+import org.jetbrains.research.ictl.riskypatterns.calculation.processors.CommitProcessor
 import org.jetbrains.research.ictl.riskypatterns.jgit.CommitsProvider
 import org.jetbrains.research.ictl.riskypatterns.jgit.FileInfoProvider
 import org.junit.jupiter.api.BeforeEach
@@ -60,12 +60,12 @@ class BusFactorTest {
 
   @Test
   fun testUserMerger() {
-    val repository = FileRepository(gitFile)
     val botFilter = BotFilter()
     val merger = UserMerger(botFilter)
-    val users = merger.mergeUsers(repository)
+    val users = getUsers()
+    val mergedUsers = merger.mergeUsers(users)
     val testUsers = Json.decodeFromString<Collection<Collection<UserInfo>>>(mergedUsersResult.readText())
-    assertEquals(users, testUsers)
+    assertEquals(mergedUsers, testUsers)
   }
 
   @Test
@@ -80,11 +80,11 @@ class BusFactorTest {
   @Test
   fun compareConsumerAndProvider() {
     val botFilter = BotFilter()
-    val repository = FileRepository(gitFile)
     val merger = UserMerger(botFilter)
-    val mergedUsers = merger.mergeUsers(repository)
+    val users = getUsers()
+    val mergedUsers = merger.mergeUsers(users)
 
-    val tree1 = runBFProvider(botFilter, mergedUsers)
+    val tree1 = runBF(botFilter, mergedUsers)
     val tree2 = runBFConsumer(botFilter, mergedUsers)
     compareTrees(tree1, tree2)
   }
@@ -92,7 +92,6 @@ class BusFactorTest {
   private fun runBFTest(previousResultFile: File, useBotFilter: Boolean = false, useUserMerger: Boolean = false) {
     var botFilter: BotFilter? = null
     var mergedUsers: Collection<Collection<UserInfo>> = emptyList()
-    val repository = FileRepository(gitFile)
 
     if (useBotFilter) {
       botFilter = BotFilter()
@@ -100,34 +99,36 @@ class BusFactorTest {
     if (useUserMerger) {
       botFilter = BotFilter()
       val merger = UserMerger(botFilter)
-      mergedUsers = merger.mergeUsers(repository)
+      val users = getUsers()
+      mergedUsers = merger.mergeUsers(users)
     }
 
-    val tree = runBFProvider(botFilter, mergedUsers)
+    val tree = runBF(botFilter, mergedUsers)
     val treeTest = Json.decodeFromString<Tree>(previousResultFile.readText())
     compareTrees(tree, treeTest)
   }
 
-  private fun runBFProvider(botFilter: BotFilter? = null, mergedUsers: Collection<Collection<UserInfo>> = emptyList()): Tree {
-    val bfProvider = BusFactorProvider(TREE_NAME, botFilter, mergedUsers)
+  private fun runBF(botFilter: BotFilter? = null, mergedUsers: Collection<Collection<UserInfo>> = emptyList()): Tree {
+    val bf = BusFactor(botFilter, mergedUsers)
     val repository = FileRepository(gitFile)
     val commitsProvider = CommitsProvider(repository)
     val fileInfoProvider = FileInfoProvider(repository)
-    return bfProvider.calculate(commitsProvider, fileInfoProvider)
+    bf.proceedCommits(commitsProvider)
+    return bf.calculate(TREE_NAME, fileInfoProvider)
   }
 
   private fun runBFConsumer(
     botFilter: BotFilter? = null,
     mergedUsers: Collection<Collection<UserInfo>> = emptyList(),
   ): Tree {
-    val bfConsumer = BusFactorConsumer(TREE_NAME, botFilter, mergedUsers)
+    val bfConsumer = BusFactor(botFilter, mergedUsers)
     val repository = FileRepository(gitFile)
     val commitsProvider = CommitsProvider(repository)
     for (commitInfo in commitsProvider) {
       bfConsumer.consumeCommit(commitInfo)
     }
     val fileInfoProvider = FileInfoProvider(repository)
-    return bfConsumer.calculate(fileInfoProvider)
+    return bfConsumer.calculate(TREE_NAME, fileInfoProvider)
   }
 
   private fun compareTrees(tree1: Tree, tree2: Tree) {
@@ -156,5 +157,19 @@ class BusFactorTest {
       val nodeBF2 = node2.busFactorStatus!!.busFactor
       assertEquals(nodeBF1, nodeBF2)
     }
+  }
+
+  private fun getUsers(): Set<UserInfo> {
+    val repository = FileRepository(gitFile)
+    val commitsProvider = CommitsProvider(repository)
+    val set = mutableSetOf<UserInfo>()
+    for (commit in commitsProvider) {
+      set.add(commit.authorUserInfo)
+      set.add(commit.committerUserInfo)
+      CommitProcessor.getCoAuthorsFromMSG(commit.fullMessage).forEach {
+        set.add(it)
+      }
+    }
+    return set
   }
 }
