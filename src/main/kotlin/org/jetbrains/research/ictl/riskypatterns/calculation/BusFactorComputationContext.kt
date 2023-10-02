@@ -21,6 +21,7 @@ data class BusFactorComputationContext(
   override val weightedOwnership: MutableMap<Int, Pair<Int, Double>> = HashMap()
 
   var lastCommitCommitterTimestamp: Long = -1
+  var lastCommitHash: String = ""
 
   fun checkData(fileNames: List<String>): Boolean {
     for (fileName in fileNames) {

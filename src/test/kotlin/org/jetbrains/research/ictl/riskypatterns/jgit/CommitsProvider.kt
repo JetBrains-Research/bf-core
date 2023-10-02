@@ -105,6 +105,8 @@ class CommitsProvider(private val repository: Repository, private val dayGap: Lo
       val authorUserInfo = UserInfo(commit.authorIdent.name, authorEmail)
       val committerUserInfo = UserInfo(commit.committerIdent.name, committerEmail)
 
+      val hash = commit.name
+
       return CommitInfo(
         authorUserInfo,
         committerUserInfo,
@@ -113,6 +115,7 @@ class CommitsProvider(private val repository: Repository, private val dayGap: Lo
         diffEntries,
         numOfParents,
         fullMessage,
+        hash,
       )
     }
 
