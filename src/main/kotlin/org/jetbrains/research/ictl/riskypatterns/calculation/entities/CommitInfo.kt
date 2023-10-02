@@ -8,5 +8,5 @@ data class CommitInfo(
   val diffEntries: Collection<DiffEntry>,
   val numOfParents: Int,
   val fullMessage: String,
-  val hash: String
+  val hash: String,
 )

@@ -115,7 +115,7 @@ class CommitsProvider(private val repository: Repository, private val dayGap: Lo
         diffEntries,
         numOfParents,
         fullMessage,
-        hash
+        hash,
       )
     }
 
