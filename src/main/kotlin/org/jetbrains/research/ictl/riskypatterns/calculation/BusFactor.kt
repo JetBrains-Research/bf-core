@@ -10,12 +10,7 @@ import org.jetbrains.research.ictl.riskypatterns.calculation.processors.CommitPr
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-class BusFactor(
-  val repositoryName: String,
-  botFilter: BotFilter? = null,
-  mergedUsers: Collection<Collection<UserInfo>> = emptyList(),
-  configSnapshot: BusFactorConfigSnapshot = BusFactorConfigSnapshot.getDefault(),
-) {
+class BusFactor(context: BusFactorComputationContext) {
 
   companion object {
     val log: Logger = LoggerFactory.getLogger(BusFactor::class.java)
@@ -40,21 +35,21 @@ class BusFactor(
       (normalizedUserAuthorship > 0.75) && (userAuthorship > 1)
   }
 
-  private val userMapper = UserMapper(botFilter, mergedUsers)
-  private val _context = BusFactorComputationContext(configSnapshot, userMapper)
-  val context: BFContext = _context
-  private val commitProcessor = CommitProcessor(_context)
+  private val _context: BusFactorComputationContext
+  val context: BFContext
+  private val commitProcessor: CommitProcessor
 
-  private fun processCommit(commitInfo: CommitInfo): Boolean {
-    return commitProcessor.processCommit(commitInfo)
+  init {
+    _context = context
+    this.context = _context
+    commitProcessor = CommitProcessor(_context)
   }
 
-  fun getBusFactorForTree(filePathsToBytes: Iterable<FileInfo>): Tree {
-    val busFactorCalculation = BusFactorCalculation(_context)
-    val root = buildTree(filePathsToBytes)
-    calculateBusFactorForTree(root, busFactorCalculation)
-    return root
-  }
+  constructor(
+    botFilter: BotFilter? = null,
+    mergedUsers: Collection<Collection<UserInfo>> = emptyList(),
+    configSnapshot: BusFactorConfigSnapshot = BusFactorConfigSnapshot.getDefault(),
+  ) : this(BusFactorComputationContext(configSnapshot, UserMapper(botFilter, mergedUsers)))
 
   private fun calculateBusFactorForTree(root: Tree, busFactorCalculation: BusFactorCalculation) {
     val queue = ArrayDeque<Tree>()
@@ -78,8 +73,8 @@ class BusFactor(
   }
 
   // fixme: add filter for files
-  private fun buildTree(filePathsToBytes: Iterable<FileInfo>): Tree {
-    val root = Tree(repositoryName, ".")
+  private fun buildTree(treeName: String, filePathsToBytes: Iterable<FileInfo>): Tree {
+    val root = Tree(treeName, ".")
     var allSize = 0L
     filePathsToBytes.forEach { (filePath, bytes) ->
       val parts = filePath.split("/")
@@ -99,19 +94,21 @@ class BusFactor(
     return root
   }
 
-  fun getNameToEmailMap() = userMapper.getNameToEmailMap()
-
   fun proceedCommits(commitsInfo: Iterable<CommitInfo>) {
-    for (commit in commitsInfo) {
-      processCommit(commit)
+    for (commitInfo in commitsInfo) {
+      commitProcessor.processCommit(commitInfo)
     }
   }
 
-  fun consumeCommit(commitInfo: CommitInfo) = processCommit(commitInfo)
+  fun consumeCommit(commitInfo: CommitInfo) = commitProcessor.processCommit(commitInfo)
 
   fun calculate(
+    treeName: String,
     filePathsToBytes: Iterable<FileInfo>,
   ): Tree {
-    return getBusFactorForTree(filePathsToBytes)
+    val busFactorCalculation = BusFactorCalculation(_context)
+    val root = buildTree(treeName, filePathsToBytes)
+    calculateBusFactorForTree(root, busFactorCalculation)
+    return root
   }
 }
