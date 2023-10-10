@@ -32,7 +32,7 @@ data class BusFactorComputationContext(
     return false
   }
 
-  private fun userToAuthorship(fileNames: List<String>): Map<Int, Double> {
+  fun userToAuthorship(fileNames: List<String>): Map<Int, Double> {
     val userToOwnership = HashMap<Int, Double>()
     for (fileName in fileNames) {
       val fileId = fileMapper.getOrNull(fileName) ?: continue
