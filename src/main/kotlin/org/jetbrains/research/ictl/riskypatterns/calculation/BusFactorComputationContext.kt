@@ -9,7 +9,7 @@ import org.jetbrains.research.ictl.riskypatterns.calculation.mappers.UserMapper
 
 @Serializable
 data class BusFactorComputationContext(
-  val configSnapshot: BusFactorConfigSnapshot = BusFactorConfigSnapshot.getDefault(),
+  override val configSnapshot: BusFactorConfigSnapshot = BusFactorConfigSnapshot.getDefault(),
   override val userMapper: UserMapper = UserMapper(),
   override val fileMapper: FileMapper = FileMapper(),
 ) : BFContext {
@@ -23,7 +23,7 @@ data class BusFactorComputationContext(
   var lastCommitCommitterTimestamp: Long = -1
   var lastCommitHash: String = ""
 
-  fun checkData(fileNames: List<String>): Boolean {
+  override fun checkData(fileNames: List<String>): Boolean {
     for (fileName in fileNames) {
       val fileId = fileMapper.getOrNull(fileName) ?: continue
       val fileInfo = filesOwnership[fileId] ?: continue
@@ -32,7 +32,7 @@ data class BusFactorComputationContext(
     return false
   }
 
-  private fun userToAuthorship(fileNames: List<String>): Map<Int, Double> {
+  override fun userToAuthorship(fileNames: List<String>): Map<Int, Double> {
     val userToOwnership = HashMap<Int, Double>()
     for (fileName in fileNames) {
       val fileId = fileMapper.getOrNull(fileName) ?: continue
@@ -46,7 +46,7 @@ data class BusFactorComputationContext(
   }
 
   // TODO: remove trains
-  fun filesUsersStats(fileNames: List<String>): HashMap<String, UserStats> {
+  override fun filesUsersStats(fileNames: List<String>): Map<String, UserStats> {
     val userToContribution = HashMap<String, UserStats>()
     var sumAuthorship = 0.0
     val isFile = fileNames.size == 1
