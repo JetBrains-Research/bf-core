@@ -9,7 +9,7 @@ import org.jetbrains.research.ictl.riskypatterns.calculation.mappers.UserMapper
 
 @Serializable
 data class BusFactorComputationContext(
-  val configSnapshot: BusFactorConfigSnapshot = BusFactorConfigSnapshot.getDefault(),
+  override val configSnapshot: BusFactorConfigSnapshot = BusFactorConfigSnapshot.getDefault(),
   override val userMapper: UserMapper = UserMapper(),
   override val fileMapper: FileMapper = FileMapper(),
 ) : BFContext {

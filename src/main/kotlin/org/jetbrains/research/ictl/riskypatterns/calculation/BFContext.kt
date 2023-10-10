@@ -8,4 +8,5 @@ interface BFContext {
   val weightedOwnership: Map<Int, Pair<Int, Double>>
   val userMapper: IUserMapper
   val fileMapper: IFileMapper
+  val configSnapshot: BusFactorConfigSnapshot
 }
