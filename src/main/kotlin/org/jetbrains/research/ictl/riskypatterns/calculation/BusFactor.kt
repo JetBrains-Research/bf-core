@@ -112,6 +112,7 @@ class BusFactor(context: BusFactorComputationContext) {
     filePathsToBytes: Iterable<FileInfo>,
   ): Tree {
     val busFactorCalculation = BusFactorCalculation(_context)
+    busFactorCalculation.computeAuthorship()
     val root = buildTree(treeName, filePathsToBytes)
     calculateBusFactorForTree(root, busFactorCalculation)
     return root
