@@ -11,10 +11,6 @@ class BusFactorCalculation(
   private val context: BusFactorComputationContext,
 ) {
 
-  init {
-    computeAuthorship(context.configSnapshot.weightedAuthorship)
-  }
-
   private fun getMajor(fileIds: Collection<Int>): Map<Int, MutableSet<Int>> {
     val majorContributors: HashMap<Int, MutableSet<Int>> = HashMap()
     for (fileId in fileIds) {
@@ -150,9 +146,8 @@ class BusFactorCalculation(
     )
   }
 
-  private fun computeAuthorship(
-    weightedAuthorship: Boolean,
-  ) {
+  fun computeAuthorship() {
+    val weightedAuthorship = context.configSnapshot.weightedAuthorship
     // Our equation for authorship computation; the extended version of the equation by Avelino et al.
     for ((fileId, contributionsOfUsers) in context.filesOwnership) {
       val (ownerId, ownerWeightedOwnership) = context.weightedOwnership[fileId] ?: (-1 to 0.0)
