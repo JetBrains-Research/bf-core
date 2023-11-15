@@ -3,6 +3,7 @@ package org.jetbrains.research.ictl.riskypatterns.calculation.processors
 import org.jetbrains.research.ictl.riskypatterns.calculation.BusFactorComputationContext
 import org.jetbrains.research.ictl.riskypatterns.calculation.ContributionsByUser
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.CommitInfo
+import org.jetbrains.research.ictl.riskypatterns.calculation.entities.CompactCommitData
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.DiffEntry
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserInfo
 
@@ -35,7 +36,7 @@ class CommitProcessor(private val context: BusFactorComputationContext) {
     }
   }
 
-  private fun getReviewers(message: String): List<String> {
+  fun getReviewers(message: String): List<String> {
     val idx = message.indexOf(REVIEW_START_TOKEN)
     if (idx == -1) return emptyList()
 
@@ -49,17 +50,17 @@ class CommitProcessor(private val context: BusFactorComputationContext) {
    * This function corresponds to addition of a new file: we want to add this file to FileMapper,
    * track it in CommitMapper (for code reviews) and save its author in filesOwnershipPrototypes
    */
-  private fun addDiff(diffEntry: DiffEntry, authorCommitTimestamp: Long, userIds: Set<Int>) {
+  private fun addDiff(diffEntry: DiffEntry, authorCommitTimestamp: Long, userIds: Set<Int>): Int {
     val filePath = getFilePath(diffEntry)
     val fileId = context.fileMapper.add(filePath)
     userIds.forEach {
       addDiff(fileId, it, authorCommitTimestamp)
     }
+    return fileId
   }
 
   private fun addDiff(fileId: Int, userId: Int, commitTimestamp: Long) {
-    val weight = context.filesOwnership.computeIfAbsent(fileId) { HashMap() }
-      .computeIfAbsent(userId) { ContributionsByUser() }
+    val weight = context.filesOwnership.computeIfAbsent(fileId) { HashMap() }.computeIfAbsent(userId) { ContributionsByUser() }
       .addFileChange(commitTimestamp, context.lastCommitCommitterTimestamp)
     context.weightedOwnership.compute(fileId) { _, v ->
       val pair = userId to weight
@@ -116,57 +117,80 @@ class CommitProcessor(private val context: BusFactorComputationContext) {
     }
   }
 
-  fun processCommit(commitInfo: CommitInfo): Boolean {
+  fun processCommit(commitInfo: CommitInfo): List<CompactCommitData>? {
     checkLastCommit()
 
-    if (commitInfo.numOfParents > 1) return false
+    if (commitInfo.numOfParents > 1) return null
 
     val authors = getAuthorsNameEmailPairs(commitInfo).filter {
       !context.userMapper.isBot(it)
     }
     if (authors.isEmpty()) {
-      return false
+      return null
     }
+
     val userIds: Set<Int> = authors.mapTo(mutableSetOf()) {
       context.userMapper.addUser(it)
     }
     val authorCommitTimestamp = commitInfo.authorCommitTimestamp
+    val compactCommitData = mutableListOf<CompactCommitData>()
+    val fileIds = mutableSetOf<Int>()
 
     for (diffEntry in commitInfo.diffEntries) {
       when (diffEntry.changeType) {
         DiffEntry.ChangeType.DELETE -> {
 //          deleteDiff(diffEntry, projectPath)
         }
-
         DiffEntry.ChangeType.RENAME -> {
           moveDiff(diffEntry)
         }
-
         else -> {
 //          ADD, MODIFY, COPY
-          addDiff(diffEntry, authorCommitTimestamp, userIds)
+          val fileId = addDiff(diffEntry, authorCommitTimestamp, userIds)
+          fileIds.add(fileId)
         }
-      }
-      if (context.configSnapshot.useReviewers && commitInfo.fullMessage != null) {
-        val reviewers = getReviewers(commitInfo.fullMessage)
-        addReviewForFile(diffEntry, reviewers, authorCommitTimestamp)
       }
     }
 
-    return true
+    compactCommitData.addAll(userIds.map { CompactCommitData(it, fileIds, CompactCommitData.Type.COMMIT) })
+
+    if (context.configSnapshot.useReviewers) {
+      val reviewerFileIds = mutableSetOf<Int>()
+      val reviewers = getReviewers(commitInfo.fullMessage)
+      val reviewersIds = reviewers.map { context.userMapper.addReviewerName(it) }
+      for (diffEntry in commitInfo.diffEntries) {
+        val fileId = addReviewersForFile(diffEntry, reviewersIds, authorCommitTimestamp)
+        reviewerFileIds.add(fileId)
+      }
+      compactCommitData.addAll(reviewersIds.map { CompactCommitData(it, reviewerFileIds, CompactCommitData.Type.REVIEW) })
+    }
+
+    return compactCommitData
+  }
+
+  fun processCompactCommitData(compactCommitData: CompactCommitData, timestamp: Long) {
+    val (userId, fileIds) = compactCommitData
+    val realFileIds = fileIds.map { context.fileMapper.getRealFileId(it) }
+    val userExists = context.userMapper.contains(compactCommitData.userId)
+    if (!userExists) throw Exception("Compact commit data user is not related to the previous calculation.")
+
+    when (compactCommitData.type) {
+      CompactCommitData.Type.COMMIT -> realFileIds.forEach { addDiff(it, userId, timestamp) }
+      CompactCommitData.Type.REVIEW -> realFileIds.forEach { addReviewer(it, userId, timestamp) }
+    }
   }
 
   // TODO: replace commitStamp with smth better. Review time is needed. Mb use committer time  instead author
-  private fun addReviewForFile(diffEntry: DiffEntry, reviewers: List<String>, authorCommitTimestamp: Long) {
+  private fun addReviewersForFile(diffEntry: DiffEntry, reviewersIds: List<Int>, authorCommitTimestamp: Long): Int {
     val filePath = getFilePath(diffEntry)
     val fileId = context.fileMapper.getOrNull(filePath)!!
-    for (reviewer in reviewers) {
-      val userId = context.userMapper.addReviewerName(reviewer)
-      context.filesOwnership.computeIfAbsent(fileId) { HashMap() }
-        .computeIfAbsent(userId) { ContributionsByUser() }
-        .addReview(authorCommitTimestamp, context.lastCommitCommitterTimestamp)
-    }
+    reviewersIds.forEach { addReviewer(fileId, it, authorCommitTimestamp) }
+    return fileId
   }
+
+  private fun addReviewer(fileId: Int, reviewerId: Int, timestamp: Long) =
+    context.filesOwnership.computeIfAbsent(fileId) { HashMap() }.computeIfAbsent(reviewerId) { ContributionsByUser() }
+      .addReview(timestamp, context.lastCommitCommitterTimestamp)
 
   private fun getAuthorsNameEmailPairs(commit: CommitInfo): Set<UserInfo> {
     val result = mutableSetOf<UserInfo>()
