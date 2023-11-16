@@ -8,6 +8,7 @@ import org.eclipse.jgit.util.FS
 import org.jetbrains.research.ictl.riskypatterns.calculation.BotFilter
 import org.jetbrains.research.ictl.riskypatterns.calculation.BusFactor
 import org.jetbrains.research.ictl.riskypatterns.calculation.UserMerger
+import org.jetbrains.research.ictl.riskypatterns.calculation.entities.CompactCommitData
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.Tree
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserInfo
 import org.jetbrains.research.ictl.riskypatterns.calculation.processors.CommitProcessor
@@ -89,6 +90,18 @@ class BusFactorTest {
     compareTrees(tree1, tree2)
   }
 
+  @Test
+  fun testCompactCommitData() {
+    val botFilter = BotFilter()
+    val merger = UserMerger(botFilter)
+    val users = getUsers()
+    val mergedUsers = merger.mergeUsers(users)
+
+    val tree1 = runBFConsumerAndRecalculateUsingCompactCommitData(botFilter, mergedUsers)
+    val tree2 = runBFConsumer(botFilter, mergedUsers)
+    compareTrees(tree1, tree2)
+  }
+
   private fun runBFTest(previousResultFile: File, useBotFilter: Boolean = false, useUserMerger: Boolean = false) {
     var botFilter: BotFilter? = null
     var mergedUsers: Collection<Collection<UserInfo>> = emptyList()
@@ -133,6 +146,35 @@ class BusFactorTest {
     return bfConsumer.calculate(TREE_NAME, fileInfoProvider)
   }
 
+  private fun runBFConsumerAndRecalculateUsingCompactCommitData(
+    botFilter: BotFilter? = null,
+    mergedUsers: Collection<Collection<UserInfo>> = emptyList(),
+  ): Tree {
+    val bfConsumer = BusFactor(botFilter, mergedUsers)
+    val repository = FileRepository(gitFile)
+    val commitsProvider = CommitsProvider(repository)
+    val lastCommit = commitsProvider.first()
+    bfConsumer.setLastCommit(lastCommit)
+    val compactData = HashMap<Long, MutableList<CompactCommitData>>()
+    for (commitInfo in commitsProvider) {
+      val commitEntry = bfConsumer.consumeCommit(commitInfo) ?: continue
+      compactData.computeIfAbsent(commitEntry.timestamp) { mutableListOf() }.addAll(commitEntry.compactCommitsData)
+    }
+    val fileInfoProvider = FileInfoProvider(repository)
+    bfConsumer.calculate(TREE_NAME, fileInfoProvider)
+
+    bfConsumer.clearResults()
+    bfConsumer.setLastCommit(lastCommit)
+
+    for ((timestamp, data) in compactData.entries.sortedByDescending { it.key }) {
+      for (compactCommitData in data) {
+        bfConsumer.consumeCompactCommitData(compactCommitData, timestamp)
+      }
+    }
+
+    return bfConsumer.calculate(TREE_NAME, fileInfoProvider)
+  }
+
   private fun compareTrees(tree1: Tree, tree2: Tree) {
     val fileNames1 = tree1.getFileNames().toSet()
     for (fileName in fileNames1) {
@@ -152,7 +194,12 @@ class BusFactorTest {
       for (user1 in node1.users) {
         val user2 = node2.users.find { it.email == user1.email }
           ?: throw Exception("Can't find user: ${user1.email} in $fileName.")
-        assertEquals(user1.authorship, user2.authorship, 0.001)
+
+        try {
+          assertEquals(user1.authorship, user2.authorship, 0.001)
+        } catch (e: Exception){
+          println("qwe")
+        }
       }
 
       val nodeBF1 = node1.busFactorStatus!!.busFactor

@@ -2,6 +2,7 @@ package org.jetbrains.research.ictl.riskypatterns.calculation.processors
 
 import org.jetbrains.research.ictl.riskypatterns.calculation.BusFactorComputationContext
 import org.jetbrains.research.ictl.riskypatterns.calculation.ContributionsByUser
+import org.jetbrains.research.ictl.riskypatterns.calculation.entities.CommitEntry
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.CommitInfo
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.CompactCommitData
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.DiffEntry
@@ -117,7 +118,7 @@ class CommitProcessor(private val context: BusFactorComputationContext) {
     }
   }
 
-  fun processCommit(commitInfo: CommitInfo): List<CompactCommitData>? {
+  fun processCommit(commitInfo: CommitInfo): CommitEntry? {
     checkLastCommit()
 
     if (commitInfo.numOfParents > 1) return null
@@ -129,59 +130,69 @@ class CommitProcessor(private val context: BusFactorComputationContext) {
       return null
     }
 
-    val userIds: Set<Int> = authors.mapTo(mutableSetOf()) {
+    val usersIds: Set<Int> = authors.mapTo(mutableSetOf()) {
       context.userMapper.addUser(it)
     }
     val authorCommitTimestamp = commitInfo.authorCommitTimestamp
     val compactCommitData = mutableListOf<CompactCommitData>()
-    val fileIds = mutableSetOf<Int>()
+    val fileIds = HashMap<Int, Int>()
 
     for (diffEntry in commitInfo.diffEntries) {
       when (diffEntry.changeType) {
         DiffEntry.ChangeType.DELETE -> {
 //          deleteDiff(diffEntry, projectPath)
         }
+
         DiffEntry.ChangeType.RENAME -> {
           moveDiff(diffEntry)
         }
+
         else -> {
 //          ADD, MODIFY, COPY
-          val fileId = addDiff(diffEntry, authorCommitTimestamp, userIds)
-          fileIds.add(fileId)
+          val fileId = addDiff(diffEntry, authorCommitTimestamp, usersIds)
+          fileIds.compute(fileId) { _, v -> if (v == null) 1 else v + 1 }
         }
       }
     }
 
-    compactCommitData.addAll(userIds.map { CompactCommitData(it, fileIds, CompactCommitData.Type.COMMIT) })
+    compactCommitData.add(CompactCommitData(usersIds, fileIds, CompactCommitData.Type.COMMIT))
 
     if (context.configSnapshot.useReviewers) {
-      val reviewerFileIds = mutableSetOf<Int>()
+      val reviewerFileIds = HashMap<Int, Int>()
       val reviewers = getReviewers(commitInfo.fullMessage)
-      val reviewersIds = reviewers.map { context.userMapper.addReviewerName(it) }
+      val reviewersIds: Set<Int> = reviewers.mapTo(mutableSetOf()) { context.userMapper.addReviewerName(it) }
       for (diffEntry in commitInfo.diffEntries) {
         val fileId = addReviewersForFile(diffEntry, reviewersIds, authorCommitTimestamp)
-        reviewerFileIds.add(fileId)
+        reviewerFileIds.compute(fileId) { _, v -> if (v == null) 1 else v + 1 }
       }
-      compactCommitData.addAll(reviewersIds.map { CompactCommitData(it, reviewerFileIds, CompactCommitData.Type.REVIEW) })
+      compactCommitData.add(CompactCommitData(reviewersIds, fileIds, CompactCommitData.Type.COMMIT))
     }
 
-    return compactCommitData
+    return CommitEntry(authorCommitTimestamp, compactCommitData)
   }
 
   fun processCompactCommitData(compactCommitData: CompactCommitData, timestamp: Long) {
-    val (userId, fileIds) = compactCommitData
-    val realFileIds = fileIds.map { context.fileMapper.getRealFileId(it) }
-    val userExists = context.userMapper.contains(compactCommitData.userId)
-    if (!userExists) throw Exception("Compact commit data user is not related to the previous calculation.")
+    checkLastCommit()
+    val (usersIds, fileIds) = compactCommitData
+    val realFileIds = fileIds.mapKeys { (k, _) -> context.fileMapper.getRealFileId(k) }
+    usersIds.forEach {
+      if (!context.userMapper.contains(it)) throw Exception("Compact commit data user is not related to the previous calculation.")
+    }
 
-    when (compactCommitData.type) {
-      CompactCommitData.Type.COMMIT -> realFileIds.forEach { addDiff(it, userId, timestamp) }
-      CompactCommitData.Type.REVIEW -> realFileIds.forEach { addReviewer(it, userId, timestamp) }
+    for (userId in usersIds) {
+      for ((fileId, count) in realFileIds) {
+        for (i in 0 until count) {
+          when (compactCommitData.type) {
+            CompactCommitData.Type.COMMIT -> addDiff(fileId, userId, timestamp)
+            CompactCommitData.Type.REVIEW -> addReviewer(fileId, userId, timestamp)
+          }
+        }
+      }
     }
   }
 
   // TODO: replace commitStamp with smth better. Review time is needed. Mb use committer time  instead author
-  private fun addReviewersForFile(diffEntry: DiffEntry, reviewersIds: List<Int>, authorCommitTimestamp: Long): Int {
+  private fun addReviewersForFile(diffEntry: DiffEntry, reviewersIds: Set<Int>, authorCommitTimestamp: Long): Int {
     val filePath = getFilePath(diffEntry)
     val fileId = context.fileMapper.getOrNull(filePath)!!
     reviewersIds.forEach { addReviewer(fileId, it, authorCommitTimestamp) }

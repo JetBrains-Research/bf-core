@@ -1,6 +1,7 @@
 package org.jetbrains.research.ictl.riskypatterns.calculation
 
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.CommitInfo
+import org.jetbrains.research.ictl.riskypatterns.calculation.entities.CompactCommitData
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.FileInfo
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.Tree
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserInfo
@@ -106,6 +107,10 @@ class BusFactor(context: BusFactorComputationContext) {
   }
 
   fun consumeCommit(commitInfo: CommitInfo) = commitProcessor.processCommit(commitInfo)
+
+  fun consumeCompactCommitData(compactCommitData: CompactCommitData, timestamp: Long) = commitProcessor.processCompactCommitData(compactCommitData, timestamp)
+
+  fun clearResults() = BusFactorCalculation(_context).clearResults()
 
   fun calculate(
     treeName: String,
