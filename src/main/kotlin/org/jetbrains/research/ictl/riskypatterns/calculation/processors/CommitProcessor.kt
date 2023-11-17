@@ -2,11 +2,17 @@ package org.jetbrains.research.ictl.riskypatterns.calculation.processors
 
 import org.jetbrains.research.ictl.riskypatterns.calculation.BusFactorComputationContext
 import org.jetbrains.research.ictl.riskypatterns.calculation.ContributionsByUser
+import org.jetbrains.research.ictl.riskypatterns.calculation.Util
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.CommitEntry
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.CommitInfo
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.CompactCommitData
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.DiffEntry
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserInfo
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.ZoneOffset
+import java.util.*
+import kotlin.collections.HashMap
 
 class CommitProcessor(private val context: BusFactorComputationContext) {
 
@@ -51,18 +57,18 @@ class CommitProcessor(private val context: BusFactorComputationContext) {
    * This function corresponds to addition of a new file: we want to add this file to FileMapper,
    * track it in CommitMapper (for code reviews) and save its author in filesOwnershipPrototypes
    */
-  private fun addDiff(diffEntry: DiffEntry, authorCommitTimestamp: Long, userIds: Set<Int>): Int {
+  private fun addDiff(diffEntry: DiffEntry, localDate: LocalDate, userIds: Set<Int>): Int {
     val filePath = getFilePath(diffEntry)
     val fileId = context.fileMapper.add(filePath)
     userIds.forEach {
-      addDiff(fileId, it, authorCommitTimestamp)
+      addDiff(fileId, it, localDate)
     }
     return fileId
   }
 
-  private fun addDiff(fileId: Int, userId: Int, commitTimestamp: Long) {
+  private fun addDiff(fileId: Int, userId: Int, localDate: LocalDate) {
     val weight = context.filesOwnership.computeIfAbsent(fileId) { HashMap() }.computeIfAbsent(userId) { ContributionsByUser() }
-      .addFileChange(commitTimestamp, context.lastCommitCommitterTimestamp)
+      .addFileChange(localDate, context.lastCommitCommitterLocalDate!!)
     context.weightedOwnership.compute(fileId) { _, v ->
       val pair = userId to weight
       if (v == null) {
@@ -113,7 +119,7 @@ class CommitProcessor(private val context: BusFactorComputationContext) {
   }
 
   private fun checkLastCommit() {
-    if (context.lastCommitCommitterTimestamp < 0 || context.lastCommitHash.isEmpty()) {
+    if (context.lastCommitCommitterLocalDate == null || context.lastCommitHash == null) {
       throw Exception("Set last commit. Before running calculation.")
     }
   }
@@ -133,7 +139,7 @@ class CommitProcessor(private val context: BusFactorComputationContext) {
     val usersIds: Set<Int> = authors.mapTo(mutableSetOf()) {
       context.userMapper.addUser(it)
     }
-    val authorCommitTimestamp = commitInfo.authorCommitTimestamp
+    val localDate = Util.toLocalDate(commitInfo.authorCommitTimestamp)
     val compactCommitData = mutableListOf<CompactCommitData>()
     val fileIds = HashMap<Int, Int>()
 
@@ -149,7 +155,7 @@ class CommitProcessor(private val context: BusFactorComputationContext) {
 
         else -> {
 //          ADD, MODIFY, COPY
-          val fileId = addDiff(diffEntry, authorCommitTimestamp, usersIds)
+          val fileId = addDiff(diffEntry, localDate, usersIds)
           fileIds.compute(fileId) { _, v -> if (v == null) 1 else v + 1 }
         }
       }
@@ -162,16 +168,16 @@ class CommitProcessor(private val context: BusFactorComputationContext) {
       val reviewers = getReviewers(commitInfo.fullMessage)
       val reviewersIds: Set<Int> = reviewers.mapTo(mutableSetOf()) { context.userMapper.addReviewerName(it) }
       for (diffEntry in commitInfo.diffEntries) {
-        val fileId = addReviewersForFile(diffEntry, reviewersIds, authorCommitTimestamp)
+        val fileId = addReviewersForFile(diffEntry, reviewersIds, localDate)
         reviewerFileIds.compute(fileId) { _, v -> if (v == null) 1 else v + 1 }
       }
       compactCommitData.add(CompactCommitData(reviewersIds, fileIds, CompactCommitData.Type.COMMIT))
     }
 
-    return CommitEntry(authorCommitTimestamp, compactCommitData)
+    return CommitEntry(localDate, compactCommitData)
   }
 
-  fun processCompactCommitData(compactCommitData: CompactCommitData, timestamp: Long) {
+  fun processCompactCommitData(compactCommitData: CompactCommitData, localDate: LocalDate) {
     checkLastCommit()
     val (usersIds, fileIds) = compactCommitData
     val realFileIds = fileIds.mapKeys { (k, _) -> context.fileMapper.getRealFileId(k) }
@@ -183,8 +189,8 @@ class CommitProcessor(private val context: BusFactorComputationContext) {
       for ((fileId, count) in realFileIds) {
         for (i in 0 until count) {
           when (compactCommitData.type) {
-            CompactCommitData.Type.COMMIT -> addDiff(fileId, userId, timestamp)
-            CompactCommitData.Type.REVIEW -> addReviewer(fileId, userId, timestamp)
+            CompactCommitData.Type.COMMIT -> addDiff(fileId, userId, localDate)
+            CompactCommitData.Type.REVIEW -> addReviewer(fileId, userId, localDate)
           }
         }
       }
@@ -192,16 +198,16 @@ class CommitProcessor(private val context: BusFactorComputationContext) {
   }
 
   // TODO: replace commitStamp with smth better. Review time is needed. Mb use committer time  instead author
-  private fun addReviewersForFile(diffEntry: DiffEntry, reviewersIds: Set<Int>, authorCommitTimestamp: Long): Int {
+  private fun addReviewersForFile(diffEntry: DiffEntry, reviewersIds: Set<Int>, localDate: LocalDate): Int {
     val filePath = getFilePath(diffEntry)
     val fileId = context.fileMapper.getOrNull(filePath)!!
-    reviewersIds.forEach { addReviewer(fileId, it, authorCommitTimestamp) }
+    reviewersIds.forEach { addReviewer(fileId, it, localDate) }
     return fileId
   }
 
-  private fun addReviewer(fileId: Int, reviewerId: Int, timestamp: Long) =
+  private fun addReviewer(fileId: Int, reviewerId: Int, localDate: LocalDate) =
     context.filesOwnership.computeIfAbsent(fileId) { HashMap() }.computeIfAbsent(reviewerId) { ContributionsByUser() }
-      .addReview(timestamp, context.lastCommitCommitterTimestamp)
+      .addReview(localDate, context.lastCommitCommitterLocalDate!!)
 
   private fun getAuthorsNameEmailPairs(commit: CommitInfo): Set<UserInfo> {
     val result = mutableSetOf<UserInfo>()
@@ -211,4 +217,21 @@ class CommitProcessor(private val context: BusFactorComputationContext) {
     result.add(UserInfo(authorName, authorEmail))
     return result
   }
+
+  private fun trimTimestamp(timestamp: Long) {
+//    val localDate = Util.toLocalDate(timestamp)
+//    localDate.toEpochSecond(LocalTime.of(0,0,0), ZoneOffset.of(TimeZone.getDefault()))
+  }
+}
+
+fun main() {
+  val date = Date()
+  val localDate = Util.toLocalDate(date.time)
+  val id = ZoneId.of(ZoneOffset.systemDefault().id)
+
+//  println(id)
+//  val new = localDate.toEpochSecond(LocalTime.of(0,0,0,0), ZoneOffset.systemDefault())
+
+  println(localDate)
+  println(localDate.toString())
 }

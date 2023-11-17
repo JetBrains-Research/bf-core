@@ -6,6 +6,8 @@ import org.jetbrains.research.ictl.riskypatterns.calculation.BusFactor.Companion
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserStats
 import org.jetbrains.research.ictl.riskypatterns.calculation.mappers.FileMapper
 import org.jetbrains.research.ictl.riskypatterns.calculation.mappers.UserMapper
+import org.jetbrains.research.ictl.riskypatterns.calculation.serializers.LocalDateSerializer
+import java.time.LocalDate
 
 @Serializable
 data class BusFactorComputationContext(
@@ -20,8 +22,9 @@ data class BusFactorComputationContext(
   //  [fileId] = (userId, weightedOwnership)
   override val weightedOwnership: MutableMap<Int, Pair<Int, Double>> = HashMap()
 
-  var lastCommitCommitterTimestamp: Long = -1
-  var lastCommitHash: String = ""
+  @Serializable(with = LocalDateSerializer::class)
+  var lastCommitCommitterLocalDate: LocalDate? = null
+  var lastCommitHash: String? = null
 
   override fun checkData(fileNames: List<String>): Boolean {
     for (fileName in fileNames) {

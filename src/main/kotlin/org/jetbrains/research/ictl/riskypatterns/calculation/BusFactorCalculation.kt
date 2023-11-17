@@ -88,8 +88,8 @@ class BusFactorCalculation(
   fun clearResults() {
     context.filesOwnership.clear()
     context.weightedOwnership.clear()
-    context.lastCommitCommitterTimestamp = -1
-    context.lastCommitHash = ""
+    context.lastCommitCommitterLocalDate = null
+    context.lastCommitHash = null
   }
 
   private fun calcUserToFileAuthorship(
