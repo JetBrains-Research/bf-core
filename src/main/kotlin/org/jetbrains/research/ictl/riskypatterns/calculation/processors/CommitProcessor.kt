@@ -217,21 +217,4 @@ class CommitProcessor(private val context: BusFactorComputationContext) {
     result.add(UserInfo(authorName, authorEmail))
     return result
   }
-
-  private fun trimTimestamp(timestamp: Long) {
-//    val localDate = Util.toLocalDate(timestamp)
-//    localDate.toEpochSecond(LocalTime.of(0,0,0), ZoneOffset.of(TimeZone.getDefault()))
-  }
-}
-
-fun main() {
-  val date = Date()
-  val localDate = Util.toLocalDate(date.time)
-  val id = ZoneId.of(ZoneOffset.systemDefault().id)
-
-//  println(id)
-//  val new = localDate.toEpochSecond(LocalTime.of(0,0,0,0), ZoneOffset.systemDefault())
-
-  println(localDate)
-  println(localDate.toString())
 }
