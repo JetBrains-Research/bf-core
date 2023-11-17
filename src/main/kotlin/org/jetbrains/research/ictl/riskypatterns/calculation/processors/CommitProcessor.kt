@@ -9,8 +9,6 @@ import org.jetbrains.research.ictl.riskypatterns.calculation.entities.CompactCom
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.DiffEntry
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserInfo
 import java.time.LocalDate
-import java.time.ZoneId
-import java.time.ZoneOffset
 import java.util.*
 import kotlin.collections.HashMap
 
