@@ -30,19 +30,6 @@ class BusFactorCalculation(
     return userMajorContributions.entries.sortedByDescending { it.value }.map { it.key }
   }
 
-  /** Here we compute the bus factor. extendedComputation is a flag for whether
-   * we use the baseline algorithm of Avelino et al. (extendedComputation == false)
-   * or use the new algorithm that uses code reviews etc. (extendedComputation == true)
-   * The algorithm is iterative: at each step we look, how many files are orphaned
-   * (every major contributor for the file is already listed in the "keyDevelopers" list).
-   * If less than a half of files are orphan, we find top contributor for each of the files,
-   * ignoring the developers from the keyDeveloper list. The person who is the top contributor
-   * for the most of the files is then added to the keyDeveloper list and the iteration is repeated.
-   * If more than half of the files are orphaned, the algorithm stops. The members of keyDevelopers list
-   * are then the core developers removing whom results in bus factor scenario, and busFactor is the bus factor
-   * of the project.
-   **/
-
   private fun countOrphan(majorFileData: Map<Int, Set<Int>>): Int {
     var result = 0
     for (v in majorFileData.values) {
@@ -97,6 +84,13 @@ class BusFactorCalculation(
   }
 
   fun userStats(fileNames: List<String>) = context.filesUsersStats(fileNames)
+
+  fun clearResults() {
+    context.filesOwnership.clear()
+    context.weightedOwnership.clear()
+    context.lastCommitCommitterLocalDate = null
+    context.lastCommitHash = null
+  }
 
   private fun calcUserToFileAuthorship(
     ownership: Int,

@@ -2,9 +2,15 @@ package org.jetbrains.research.ictl.riskypatterns.calculation.processors
 
 import org.jetbrains.research.ictl.riskypatterns.calculation.BusFactorComputationContext
 import org.jetbrains.research.ictl.riskypatterns.calculation.ContributionsByUser
+import org.jetbrains.research.ictl.riskypatterns.calculation.Util
+import org.jetbrains.research.ictl.riskypatterns.calculation.entities.CommitEntry
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.CommitInfo
+import org.jetbrains.research.ictl.riskypatterns.calculation.entities.CompactCommitData
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.DiffEntry
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserInfo
+import java.time.LocalDate
+import java.util.*
+import kotlin.collections.HashMap
 
 class CommitProcessor(private val context: BusFactorComputationContext) {
 
@@ -35,7 +41,7 @@ class CommitProcessor(private val context: BusFactorComputationContext) {
     }
   }
 
-  private fun getReviewers(message: String): List<String> {
+  fun getReviewers(message: String): List<String> {
     val idx = message.indexOf(REVIEW_START_TOKEN)
     if (idx == -1) return emptyList()
 
@@ -49,18 +55,18 @@ class CommitProcessor(private val context: BusFactorComputationContext) {
    * This function corresponds to addition of a new file: we want to add this file to FileMapper,
    * track it in CommitMapper (for code reviews) and save its author in filesOwnershipPrototypes
    */
-  private fun addDiff(diffEntry: DiffEntry, authorCommitTimestamp: Long, userIds: Set<Int>) {
+  private fun addDiff(diffEntry: DiffEntry, localDate: LocalDate, userIds: Set<Int>): Int {
     val filePath = getFilePath(diffEntry)
     val fileId = context.fileMapper.add(filePath)
     userIds.forEach {
-      addDiff(fileId, it, authorCommitTimestamp)
+      addDiff(fileId, it, localDate)
     }
+    return fileId
   }
 
-  private fun addDiff(fileId: Int, userId: Int, commitTimestamp: Long) {
-    val weight = context.filesOwnership.computeIfAbsent(fileId) { HashMap() }
-      .computeIfAbsent(userId) { ContributionsByUser() }
-      .addFileChange(commitTimestamp, context.lastCommitCommitterTimestamp)
+  private fun addDiff(fileId: Int, userId: Int, localDate: LocalDate) {
+    val weight = context.filesOwnership.computeIfAbsent(fileId) { HashMap() }.computeIfAbsent(userId) { ContributionsByUser() }
+      .addFileChange(localDate, context.lastCommitCommitterLocalDate!!)
     context.weightedOwnership.compute(fileId) { _, v ->
       val pair = userId to weight
       if (v == null) {
@@ -111,26 +117,29 @@ class CommitProcessor(private val context: BusFactorComputationContext) {
   }
 
   private fun checkLastCommit() {
-    if (context.lastCommitCommitterTimestamp < 0 || context.lastCommitHash.isEmpty()) {
+    if (context.lastCommitCommitterLocalDate == null || context.lastCommitHash == null) {
       throw Exception("Set last commit. Before running calculation.")
     }
   }
 
-  fun processCommit(commitInfo: CommitInfo): Boolean {
+  fun processCommit(commitInfo: CommitInfo): CommitEntry? {
     checkLastCommit()
 
-    if (commitInfo.numOfParents > 1) return false
+    if (commitInfo.numOfParents > 1) return null
 
     val authors = getAuthorsNameEmailPairs(commitInfo).filter {
       !context.userMapper.isBot(it)
     }
     if (authors.isEmpty()) {
-      return false
+      return null
     }
-    val userIds: Set<Int> = authors.mapTo(mutableSetOf()) {
+
+    val usersIds: Set<Int> = authors.mapTo(mutableSetOf()) {
       context.userMapper.addUser(it)
     }
-    val authorCommitTimestamp = commitInfo.authorCommitTimestamp
+    val localDate = Util.toLocalDateUTC(commitInfo.authorCommitTimestamp)
+    val compactCommitData = mutableListOf<CompactCommitData>()
+    val fileIds = HashMap<Int, Int>()
 
     for (diffEntry in commitInfo.diffEntries) {
       when (diffEntry.changeType) {
@@ -144,29 +153,59 @@ class CommitProcessor(private val context: BusFactorComputationContext) {
 
         else -> {
 //          ADD, MODIFY, COPY
-          addDiff(diffEntry, authorCommitTimestamp, userIds)
+          val fileId = addDiff(diffEntry, localDate, usersIds)
+          fileIds.compute(fileId) { _, v -> if (v == null) 1 else v + 1 }
         }
-      }
-      if (context.configSnapshot.useReviewers && commitInfo.fullMessage != null) {
-        val reviewers = getReviewers(commitInfo.fullMessage)
-        addReviewForFile(diffEntry, reviewers, authorCommitTimestamp)
       }
     }
 
-    return true
+    compactCommitData.add(CompactCommitData(usersIds, fileIds, CompactCommitData.Type.COMMIT))
+
+    if (context.configSnapshot.useReviewers) {
+      val reviewerFileIds = HashMap<Int, Int>()
+      val reviewers = getReviewers(commitInfo.fullMessage)
+      val reviewersIds: Set<Int> = reviewers.mapTo(mutableSetOf()) { context.userMapper.addReviewerName(it) }
+      for (diffEntry in commitInfo.diffEntries) {
+        val fileId = addReviewersForFile(diffEntry, reviewersIds, localDate)
+        reviewerFileIds.compute(fileId) { _, v -> if (v == null) 1 else v + 1 }
+      }
+      compactCommitData.add(CompactCommitData(reviewersIds, fileIds, CompactCommitData.Type.COMMIT))
+    }
+
+    return CommitEntry(localDate, compactCommitData)
+  }
+
+  fun processCompactCommitData(compactCommitData: CompactCommitData, localDate: LocalDate) {
+    checkLastCommit()
+    val (usersIds, fileIds) = compactCommitData
+    val realFileIds = fileIds.mapKeys { (k, _) -> context.fileMapper.getRealFileId(k) }
+    usersIds.forEach {
+      if (!context.userMapper.contains(it)) throw Exception("Compact commit data user is not related to the previous calculation.")
+    }
+
+    for (userId in usersIds) {
+      for ((fileId, count) in realFileIds) {
+        for (i in 0 until count) {
+          when (compactCommitData.type) {
+            CompactCommitData.Type.COMMIT -> addDiff(fileId, userId, localDate)
+            CompactCommitData.Type.REVIEW -> addReviewer(fileId, userId, localDate)
+          }
+        }
+      }
+    }
   }
 
   // TODO: replace commitStamp with smth better. Review time is needed. Mb use committer time  instead author
-  private fun addReviewForFile(diffEntry: DiffEntry, reviewers: List<String>, authorCommitTimestamp: Long) {
+  private fun addReviewersForFile(diffEntry: DiffEntry, reviewersIds: Set<Int>, localDate: LocalDate): Int {
     val filePath = getFilePath(diffEntry)
     val fileId = context.fileMapper.getOrNull(filePath)!!
-    for (reviewer in reviewers) {
-      val userId = context.userMapper.addReviewerName(reviewer)
-      context.filesOwnership.computeIfAbsent(fileId) { HashMap() }
-        .computeIfAbsent(userId) { ContributionsByUser() }
-        .addReview(authorCommitTimestamp, context.lastCommitCommitterTimestamp)
-    }
+    reviewersIds.forEach { addReviewer(fileId, it, localDate) }
+    return fileId
   }
+
+  private fun addReviewer(fileId: Int, reviewerId: Int, localDate: LocalDate) =
+    context.filesOwnership.computeIfAbsent(fileId) { HashMap() }.computeIfAbsent(reviewerId) { ContributionsByUser() }
+      .addReview(localDate, context.lastCommitCommitterLocalDate!!)
 
   private fun getAuthorsNameEmailPairs(commit: CommitInfo): Set<UserInfo> {
     val result = mutableSetOf<UserInfo>()

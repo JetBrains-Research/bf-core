@@ -1,8 +1,9 @@
 package org.jetbrains.research.ictl.riskypatterns.calculation
 
 import kotlinx.serialization.Serializable
+import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 import java.util.*
-import java.util.concurrent.TimeUnit
 import kotlin.math.exp
 
 /**
@@ -21,24 +22,22 @@ class ContributionsByUser {
   var authorship: Double = 0.0
   var normalizedAuthorship: Double = 0.0
 
-  private fun getWeight(timestamp: Long, latestCommitTimestamp: Long): Double {
-    // TODO: Do we really need dates here?
-    val date = Date(timestamp)
-    val latestDate = Date(latestCommitTimestamp)
-    val passedDays = TimeUnit.DAYS.convert(latestDate.time - date.time, TimeUnit.MILLISECONDS)
+  private fun getWeight(localDate: LocalDate, latestCommitLocalDate: LocalDate): Double {
+    if (localDate > latestCommitLocalDate) throw Exception("Current commit date is older than provided latest commit date.")
+    val passedDays = localDate.until(latestCommitLocalDate, ChronoUnit.DAYS)
     return exp(-1.0 * passedDays / BusFactorConstants.DECAY_CHARACTERISTIC_TIME)
   }
 
-  fun addFileChange(commitTimestamp: Long, latestCommitTimestamp: Long): Double {
-    val weight = getWeight(commitTimestamp, latestCommitTimestamp)
+  fun addFileChange(localDate: LocalDate, latestCommitLocalDate: LocalDate): Double {
+    val weight = getWeight(localDate, latestCommitLocalDate)
     commits += 1
     weightedCommits += weight
     return weight
   }
 
-  fun addReview(reviewTimestamp: Long, latestCommitTimestamp: Long) {
+  fun addReview(localDate: LocalDate, latestCommitLocalDate: LocalDate) {
     reviews += 1
-    weightedReviews += getWeight(reviewTimestamp, latestCommitTimestamp)
+    weightedReviews += getWeight(localDate, latestCommitLocalDate)
   }
 
   fun isMajor(): Boolean {

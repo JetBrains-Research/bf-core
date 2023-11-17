@@ -1,3 +1,5 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+
 val kotlin_version: String by project
 val logback_version: String by project
 
@@ -10,7 +12,7 @@ plugins {
 }
 
 group = "org.jetbrains.research.ictl"
-version = "0.0.10"
+version = "0.0.11"
 
 repositories {
   mavenCentral()
@@ -44,6 +46,7 @@ tasks {
     useJUnitPlatform()
     // Show test results.
     testLogging {
+      exceptionFormat = TestExceptionFormat.FULL
       showStandardStreams = true
       events("passed", "skipped", "failed")
     }

@@ -1,6 +1,7 @@
 package org.jetbrains.research.ictl.riskypatterns.calculation
 
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.CommitInfo
+import org.jetbrains.research.ictl.riskypatterns.calculation.entities.CompactCommitData
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.FileInfo
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.Tree
 import org.jetbrains.research.ictl.riskypatterns.calculation.entities.UserInfo
@@ -9,6 +10,7 @@ import org.jetbrains.research.ictl.riskypatterns.calculation.mappers.UserMapper
 import org.jetbrains.research.ictl.riskypatterns.calculation.processors.CommitProcessor
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
 
 class BusFactor(context: BusFactorComputationContext) {
 
@@ -95,7 +97,7 @@ class BusFactor(context: BusFactorComputationContext) {
   }
 
   fun setLastCommit(lastCommitInfo: CommitInfo) {
-    _context.lastCommitCommitterTimestamp = lastCommitInfo.committerTimestamp
+    _context.lastCommitCommitterLocalDate = Util.toLocalDateUTC(lastCommitInfo.committerTimestamp)
     _context.lastCommitHash = lastCommitInfo.hash
   }
 
@@ -106,6 +108,13 @@ class BusFactor(context: BusFactorComputationContext) {
   }
 
   fun consumeCommit(commitInfo: CommitInfo) = commitProcessor.processCommit(commitInfo)
+
+  fun consumeCompactCommitData(compactCommitData: CompactCommitData, localDate: LocalDate) = commitProcessor.processCompactCommitData(
+    compactCommitData,
+    localDate,
+  )
+
+  fun clearResults() = BusFactorCalculation(_context).clearResults()
 
   fun calculate(
     treeName: String,
