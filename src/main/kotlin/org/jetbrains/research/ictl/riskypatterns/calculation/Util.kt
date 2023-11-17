@@ -5,5 +5,7 @@ import java.time.LocalDate
 import java.time.ZoneId
 
 object Util {
-  fun toLocalDate(timestamp: Long): LocalDate = Instant.ofEpochMilli(timestamp).atZone(ZoneId.systemDefault()).toLocalDate()
+  private fun toSystemZonedDateTime(timestamp: Long) = Instant.ofEpochMilli(timestamp).atZone(ZoneId.systemDefault())
+
+  fun toLocalDateUTC(timestamp: Long): LocalDate = toSystemZonedDateTime(timestamp).withZoneSameInstant(ZoneId.of("UTC")).toLocalDate()
 }

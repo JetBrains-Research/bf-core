@@ -137,7 +137,7 @@ class CommitProcessor(private val context: BusFactorComputationContext) {
     val usersIds: Set<Int> = authors.mapTo(mutableSetOf()) {
       context.userMapper.addUser(it)
     }
-    val localDate = Util.toLocalDate(commitInfo.authorCommitTimestamp)
+    val localDate = Util.toLocalDateUTC(commitInfo.authorCommitTimestamp)
     val compactCommitData = mutableListOf<CompactCommitData>()
     val fileIds = HashMap<Int, Int>()
 

@@ -97,7 +97,7 @@ class BusFactor(context: BusFactorComputationContext) {
   }
 
   fun setLastCommit(lastCommitInfo: CommitInfo) {
-    _context.lastCommitCommitterLocalDate = Util.toLocalDate(lastCommitInfo.committerTimestamp)
+    _context.lastCommitCommitterLocalDate = Util.toLocalDateUTC(lastCommitInfo.committerTimestamp)
     _context.lastCommitHash = lastCommitInfo.hash
   }
 
