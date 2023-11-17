@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "org.jetbrains.research.ictl"
-version = "0.0.10"
+version = "0.0.11"
 
 repositories {
   mavenCentral()
