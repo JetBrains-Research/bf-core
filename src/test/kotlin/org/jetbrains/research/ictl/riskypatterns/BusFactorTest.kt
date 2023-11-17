@@ -195,7 +195,7 @@ class BusFactorTest {
       for (user1 in node1.users) {
         val user2 = node2.users.find { it.email == user1.email }
           ?: throw Exception("Can't find user: ${user1.email} in $fileName.")
-         assertEquals(user1.authorship, user2.authorship, 0.001)
+        assertEquals(user1.authorship, user2.authorship, 0.001)
       }
 
       val nodeBF1 = node1.busFactorStatus!!.busFactor
