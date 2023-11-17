@@ -109,7 +109,10 @@ class BusFactor(context: BusFactorComputationContext) {
 
   fun consumeCommit(commitInfo: CommitInfo) = commitProcessor.processCommit(commitInfo)
 
-  fun consumeCompactCommitData(compactCommitData: CompactCommitData, localDate: LocalDate) = commitProcessor.processCompactCommitData(compactCommitData, localDate)
+  fun consumeCompactCommitData(compactCommitData: CompactCommitData, localDate: LocalDate) = commitProcessor.processCompactCommitData(
+    compactCommitData,
+    localDate,
+  )
 
   fun clearResults() = BusFactorCalculation(_context).clearResults()
 

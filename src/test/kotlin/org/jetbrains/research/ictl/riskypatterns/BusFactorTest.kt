@@ -1,6 +1,5 @@
 package org.jetbrains.research.ictl.riskypatterns
 
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.internal.storage.file.FileRepository
@@ -199,7 +198,7 @@ class BusFactorTest {
 
         try {
           assertEquals(user1.authorship, user2.authorship, 0.001)
-        } catch (e: Exception){
+        } catch (e: Exception) {
           println("qwe")
         }
       }
