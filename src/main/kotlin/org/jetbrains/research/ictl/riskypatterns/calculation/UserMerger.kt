@@ -13,6 +13,7 @@ class UserMerger(val botFilter: BotFilter? = null) {
       private val timezones = setOf("cst", "pst", "pdt", "cdt", "gmt", "bst", "cet", "cest")
       private const val SIZE = 3
       private val DELIMITERS = setOf(' ', '+', '-', ',', '.', '_', ';')
+      private val regexGithubEmailId = Regex("^\\d+\\+")
 
       private fun cleanName(name: String): String {
         val lowerCaseNoUnicode = name.lowercase().filter { c -> c.isLowerCase() || c == ' ' }
@@ -129,7 +130,12 @@ class UserMerger(val botFilter: BotFilter? = null) {
     }
 
     val name: String = cleanName(userInfo.userName)
-    val email: String = userInfo.userEmail.lowercase()
+    val email: String = userInfo.userEmail.lowercase().let {
+      if (it.endsWith("@users.noreply.github.com")) {
+        return@let it.replace(regexGithubEmailId, "")
+      }
+      return@let it
+    }
     val firstName: String
     val lastName: String
     val penultimateName: String
