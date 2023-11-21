@@ -139,7 +139,7 @@ class CommitProcessor(private val context: BusFactorComputationContext) {
 
     if (commitInfo.numOfParents > 1) return null
 
-    val authors = getAuthorsNameEmailPairs(commitInfo).filter {
+    val authors = getAuthors(commitInfo).filter {
       !context.userMapper.isBot(it)
     }
     if (authors.isEmpty()) {
@@ -219,7 +219,7 @@ class CommitProcessor(private val context: BusFactorComputationContext) {
     context.filesOwnership.computeIfAbsent(fileId) { HashMap() }.computeIfAbsent(reviewerId) { ContributionsByUser() }
       .addReview(localDate, context.lastCommitCommitterLocalDate!!)
 
-  private fun getAuthorsNameEmailPairs(commit: CommitInfo): Set<UserInfo> {
+  private fun getAuthors(commit: CommitInfo): Set<UserInfo> {
     val result = mutableSetOf<UserInfo>()
     result.addAll(getCoAuthorsFromMSG(commit.fullMessage))
     val authorName = commit.authorUserInfo.userName
