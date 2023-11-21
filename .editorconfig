@@ -15,5 +15,8 @@ ij_kotlin_allow_trailing_comma_on_call_site = true
 ij_kotlin_name_count_to_use_star_import = 30
 ij_kotlin_name_count_to_use_star_import_for_members = 30
 
+[CommitProcessor.kt]
+max_line_length = 505
+
 [*.md]
 trim_trailing_whitespace = false
