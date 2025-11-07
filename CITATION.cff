@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If you use this work, please cite it as below."
+preferred-citation:
+  type: conference-paper
+  title: "Bus factor explorer"
+  authors:
+    - family-names: Klimov
+      given-names: Egor
+    - family-names: Ahmed
+      given-names: Muhammad Umair
+    - family-names: Sviridov
+      given-names: Nikolai
+    - family-names: Derakhshanfar
+      given-names: Pouria
+    - family-names: Tüzün
+      given-names: Eray
+    - family-names: Kovalenko
+      given-names: Vladimir
+  year: 2023
+  collection-title: "2023 38th IEEE/ACM International Conference on Automated Software Engineering (ASE)"
+  pages:
+    start: 2018
+    end: 2021
+  publisher: "IEEE"
